@@ -1,4 +1,6 @@
 ## Marco Mravic UCSF Biophysics DeGrado Lab July 2015 ##
+#Example command line
+##python ~/bin/add_ligand_contacts_Confind.py --p 3A4J/3A4J.pdb --rout 3A4J/3A4J.rout --lig 2930,2931 --rcut 7 --freq 0 --c 3A4J/3A4J.contacts 
 
 helpStr = """
  Modification step to TERM (Zhang et al 2015, Structure) analysis after CONFIND and before generating TERMS, 
@@ -81,20 +83,18 @@ print
 pdbGroup = parsePDB( pdbf )
 print "\n"
 
-print ligStr
 contactList = []
 for i in ligStr:
-	print pdbGroup.getBySerial( i, i+1 ).getCoords()[0]
+	lig_coords = pdbGroup.getBySerial( i, i+1 ).getCoords()[0]
 
-
-
-	if len( pdbGroup.getBySerial( i, i+1 ).getCoords()[0] ) < 3:
+	if len( lig_coords ) < 3:
 		print "\nWARNING: No valid coordinates of ligand of serial number", i
 
 
-	print pdbGroup.select( pdbGroup.getBySerial( i, i+1 ).getCoords[0] , 7 )
+	#print pdbGroup.select( pdbGroup.getBySerial( i, i+1 ).getCoords[0] , 7 )
 
-#	cont = Contacts(pdbGroup)
+	cont = Contacts( pdbGroup )
+	print cont.select( 7, lig_coords )
 #	print cont.select( pdbGroup.getBySerial( i, i+1 ).getCoords[0] , 7 ) 
 
 
