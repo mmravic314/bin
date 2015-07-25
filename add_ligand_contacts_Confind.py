@@ -46,7 +46,6 @@ def parseLigandStr( lig ):
 	l = []
 	try: 
 		lig = lig.split(',')
-		print lig
 		for i in lig: 
 			if '-' in i:
 				if len( i.split('-') ) != 2: 
@@ -64,6 +63,24 @@ def parseLigandStr( lig ):
 
 	return l
 
+class Ligand():
+	def __init__(self, serial, coords ):
+		self.name = serial
+		self.coords = coords
+		contacts = []
+
+	def __repr__(self):
+		return self.name
+
+class Residue():
+	def __init__(self, serial, coords ):
+		self.name = serial
+		self.coords = coords
+		contacts = []
+
+	def __repr__(self):
+		return self.name
+
 
 
 ########################  MAIN  #####################################
@@ -79,7 +96,8 @@ ligStr 	= args.lig
 ligStr 	= parseLigandStr( ligStr )
 print
 
-# Parse Pdb, using ProDy package, and get input ligand coordinates
+### Parse Pdb, using ProDy package, and get input ligand coordinates
+##  make list of residues (chain,resnum) with heavy atoms within 7 angstroms
 pdbGroup = parsePDB( pdbf )
 print "\n"
 
@@ -91,11 +109,102 @@ for i in ligStr:
 		print "\nWARNING: No valid coordinates of ligand of serial number", i
 
 
-	#print pdbGroup.select( pdbGroup.getBySerial( i, i+1 ).getCoords[0] , 7 )
-
 	cont = Contacts( pdbGroup )
-	print cont.select( 7, lig_coords )
-#	print cont.select( pdbGroup.getBySerial( i, i+1 ).getCoords[0] , 7 ) 
+	for j in cont.select( rcut , lig_coords ):
+
+		ID = ( j.getChid() , str( j.getResnum())  )
+		if ID not in contactList:
+			contactList.append( ID )
+
+
+########### temp section for handling rotamer library
+######## Saving rotamer probability look-up table a pickle 
+#RR = open( '/home/xray/bin/RR2000.rotlib', 'rU')
+#flg = 0
+#rotVals = {}
+#for i in RR:
+#
+#	if i[:4] == 'RESI':
+#		resi = i.split()[1]
+#		flg +=1
+#	if i[:4] == "PROB":
+#		step = 1
+#		for p in i.split()[1:]:
+#			rotVals[ resi + ',' + str( step ) ] = float(p) 
+#			step += 1
+#
+#pic.dump( rotVals, open('/home/xray/termanal/support.default/rotlib/rotVals.pkl', 'wb') )
+
+########### Dictionary for amino acid frequency in data base taking from CONFIND.cpp July 24, 2015
+## should alter these values to reflect database, maybe supply equivilant hash in pickle 
+aaProp = {}
+aaProp["ALA"] = 7.73; aaProp["CYS"] = 1.84; aaProp["ASP"] = 5.82; aaProp["GLU"] = 6.61; aaProp["PHE"] = 4.05;
+aaProp["GLY"] = 7.11; aaProp["HIS"] = 2.35; aaProp["HSD"] = 2.35; aaProp["ILE"] = 5.66; aaProp["LYS"] = 6.27;
+aaProp["LEU"] = 8.83; aaProp["MET"] = 2.08; aaProp["ASN"] = 4.50; aaProp["PRO"] = 4.52; aaProp["GLN"] = 3.94;
+aaProp["ARG"] = 5.03; aaProp["SER"] = 6.13; aaProp["THR"] = 5.53; aaProp["VAL"] = 6.91; aaProp["TRP"] = 1.51; aaProp["TYR"] = 3.54;
+
+
+### See fraction of potential rotamers of residues nearby ligand reach within 3 Angstroms
+
+with open( routf ) as file:
+
+	record_lines = []
+	stream_path = './tmp'
+	# Write a tmp file for each rotamer to parse w/ prody
+	# Call Auxillary pickle dictionary looking up rotamer library info/probailities 
+	rotVals = pic.load( open('/home/xray/termanal/support.default/rotlib/rotVals.pkl', 'rb' ))
+	# And another to read amino acid propensities
+
+
+	contactFlag = 0
+	for i in file:
+
+		#Reset frequency count for each chain,res  
+		prvResID = ''
+
+		# if end of rotamer model, build rotamer object and refresh line list
+		if i[:3] == 'REM': 
+			resID =  tuple( i.split()[1].split(',')[:2] )
+			res = i.split()[1].split(',')[2]
+			rotID = i.split()[1].split(',')[2] + ',' +  i.split()[-1] 
+
+			# record rotamer model if in ligand contact list
+			if resID in contactList:
+				contactFlag = 1
+				tempStream = open( stream_path , 'w' )
+				tempStream.write( i )
+
+			else: 
+				contactFlag = 0
+
+		else: 
+			if contactFlag > 0:
+				if i[:3] == 'END':
+					tempStream.write(i)
+					tempStream.close()
+
+					# build rotamer model
+					print resID, rotID, 'rotamer probability:', rotVals[ rotID ], 'amino acid frq:', aaProp[res]
+
+					rotamer = parsePDB( stream_path )
+
+
+					#
+
+				
+				else: 
+					tempStream.write( i )
+
+
+
+
+			else: continue
+
+
+
+
+			#sys.exit()
+
 
 
 
