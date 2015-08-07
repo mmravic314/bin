@@ -64,10 +64,13 @@ def parseLigandStr( lig ):
 	return l
 
 class Ligand():
-	def __init__(self, serial, coords ):
+	def __init__(self, serial, coords, chain, number, identity ):
 		self.name = 	str( serial )
 		self.coords = 	coords
-		contacts = 		[]
+		self.chain = 		chain 
+		self.number = 		number
+		self.identity = 	identity
+		self.contacts = 		[]
 
 	def __repr__(self):
 		return self.name
@@ -137,8 +140,13 @@ contactList = []		# joint array for any residues within 7 angstroms from any lig
 ligands = []			# array of ligand objects (coords + serial)
 unique = []				# Lazy way to recall & index residues "nearby" ligands
 for i in ligStr:
-	lig_coords = pdbGroup.getBySerial( i, i+1 ).getCoords()[0]
-	ligands.append( Ligand( i, lig_coords ) )
+	lig_coords 		= pdbGroup.getBySerial( i, i+1 ).getCoords()[0]
+	lig_chain		= pdbGroup.getBySerial( i, i+1 ).getChids()[0]
+	lig_number		= pdbGroup.getBySerial( i, i+1 ).getResnums()[0]
+	lig_resID		= pdbGroup.getBySerial( i, i+1 ).getResnames()[0]
+
+
+	ligands.append( Ligand( i, lig_coords, lig_chain, str( lig_number ), lig_resID )  )
 
 	if len( lig_coords ) < 3:
 		print "\nWARNING: No valid coordinates of ligand with serial number", i
@@ -182,7 +190,7 @@ print "\nRotamers file"
 with open( routf ) as file:
 
 	record_lines = []
-	stream_path = './tmp'
+	tmp_path = './tmp'
 	# Write a tmp file for each rotamer to parse w/ prody
 
 	# Call Auxillary pickle dictionary looking up rotamer library info/probailities 
@@ -203,7 +211,7 @@ with open( routf ) as file:
 			# record rotamer model if in ligand contact list
 			if resID in unique:
 				contactFlag = 1
-				tempStream = open( stream_path , 'w' )
+				tempStream = open( tmp_path , 'w' )
 				tempStream.write( i )
 
 			else: 
@@ -216,7 +224,7 @@ with open( routf ) as file:
 					tempStream.close()
 
 					# build rotamer model
-					rotamer = parsePDB( stream_path )
+					rotamer = parsePDB( tmp_path )
 					# Find index of this residue's ID (e.g "A,56"; chain,resNumber) corresponding to Residue object in contactList
 					# Store this rotamer AtomGroup (ProDy  object) in Residue object's hash by its rotamer ID (e.g. "ARG,11")
 					contactList[ unique.index( resID ) ].rotamers[ rotID ] = rotamer
@@ -251,11 +259,19 @@ for resi in contactList:
 			except TypeError:
 				pass		 
 
-		print maxV, resi, resi.identity, fr, l, round( fr/maxV, 5 ) 
+		l.contacts.append( ( resi , round( fr/maxV, 5 ) ) )
+
+for l in ligands:
+	print "Residues and frequency of potential rotamers contacting ligand atom", l
+	print l, l.identity, l.number, l.chain
+	for k in l.contacts:
+		print str( k )  
+	print 
 
 
 #print r, k, 'rotamer probability:', rotVals[ k ], 'amino acid frq:', aaProp[ k.split(',')[0] ]
-
+# Clean up temporary files
+os.remove( tmp_path )
 
 
 
