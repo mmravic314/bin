@@ -1,6 +1,8 @@
 ## PDB file utilities ##
 ##################### Written By: Marco Mravic  ###  Degrado Lab UCSF Biophysics Aug 2015
 
+import numpy as np
+
 divalent_metals = [
 'BA',
 'BE', 
@@ -28,6 +30,12 @@ divalent_metals = [
 'V', 
 'Y', 
 'ZN' ]
+
+natAA = {}
+natAA["ALA"] = 'A'; natAA["CYS"] = 'C'; natAA["ASP"] = 'D'; natAA["GLU"] = 'E'; natAA["PHE"] = 'F';
+natAA["GLY"] = 'G'; natAA["HIS"] = 'H'; natAA["HSD"] = 'H'; natAA["ILE"] = 'I'; natAA["LYS"] = 'K';
+natAA["LEU"] = 'L'; natAA["MET"] = 'M'; natAA["ASN"] = 'N'; natAA["PRO"] = 'P'; natAA["GLN"] = 'N';
+natAA["ARG"] = 'R'; natAA["SER"] = 'S'; natAA["THR"] = 'T'; natAA["VAL"] = 'V'; natAA["TRP"] = 'W'; natAA["TYR"] = 'Y';
 
 ############### Class def's ##############
 
