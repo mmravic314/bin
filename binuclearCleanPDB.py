@@ -19,6 +19,7 @@ import sys, os, numpy as np, cPickle as pic
 # 3F79 [3F79a, Q9I045, 3F79b, Q9I045, 3F79c, Q9I045, 3F79d, Q9I045, 3F79e, Q9I045, 3F79f, Q9I045]
 
 # Example command line
+# Run from directory containing pickle files (e.g. ~/tertBuilding/)
 # python ~/bin/binuclearCleanPDB.py ./binuclearDivalentPDB.txt ~/pdb_080615 ~/tertBuilding/binucUniProt/
 # python ~/bin/binuclearCleanPDB.py path2PDBchainUniprotList path2PDBfiles path2uniprot
 
@@ -58,8 +59,8 @@ import sys, os, numpy as np, cPickle as pic
 #
 ################
 
-inMap 	= pic.load( open('/home/xray/tertBuilding/binucUniProtPDBmap.pkl',  'rb') )
-pdbs 	= pic.load( open('/home/xray/tertBuilding/binucPDB.pkl', 'rb') ) 
+inMap 	= pic.load( open(   os.path.abspath( os.path.join('./' , 'binucUniProtPDBmap.pkl') ) ,  'rb') )
+pdbs 	= pic.load( open(  os.path.abspath( os.path.join('./', 'binucPDB.pkl') ), 'rb') ) 
 ## Parse each PDB and UniProt entries to create lists of annotated/validated 'natural' binuclear zincs and less strict di-zinc sites
 ## Save each PDB chain object in hash with metal pair objects detailing contacting residues
 chainObj = {}
@@ -194,29 +195,41 @@ def find_sites(pdbs):
 
  return pairsByPdb
 
-pairsByPdb = find_sites( pdbs )
-pic.dump(pairsByPdb, open( '/home/xray/tertBuilding/biPairs_byPDB.pkl', 'wb') )
+#pairsByPdb = find_sites( pdbs )
+#pic.dump(pairsByPdb, open( '/home/xray/tertBuilding/biPairs_byPDB.pkl', 'wb') )
 
+# Look for contact to specified elements (str type) annotated in uniprot [between input residues(takes number only)]
+def parseUniprot(path, atom, resList):
+	with open(path) as file:
+		for i in file:
+			#print i.upper()
+			if 'ZN' in i.upper():
+				print i.rstrip()
+
+	return
 
 ### Created this hash in the 'find binuclear sites...' section, which is now commented out
-#pairsByPdb = pic.load( open( '/home/xray/tertBuilding/biPairs_byPDB.pkl', 'rb') )
+pairsByPdb = pic.load( open( os.path.abspath( os.path.join('./', 'biPairs_byPDB.pkl') ), 'rb') )
 
 
 ############ map coordinating residues to uniprot numbering and see if corresponds to known zinc sites  ############3
+
 zn_cryst		=	[]
 zn_annotated	=	[]
 zn_dbase		=	[]
 hitchains 		= 	[]
 
+from collections import defaultdict
+
 for s, c in sorted( pairsByPdb.items() ):
-	
+	print s, c
 	# for each binuclear site in the set of pdbs
 	for m in c:
 		a1 = m.name.split('_')[0]
 		a2 = m.name.split('+')[0].split('_')[0]
 		#option 1: both are crystallographic zincs  -> next check if this is confirmed by uniprot/text 	 
 		if a1 == 'ZN' and a2 =='ZN':
-			print pdbs[s]
+			print m
 
 			if s not in zn_cryst:
 				zn_cryst.append(s)
@@ -224,15 +237,23 @@ for s, c in sorted( pairsByPdb.items() ):
 				# One a double zinc containing structure is found, look at its coordinating residues
 				# make sure it's in uniprot as zinc binding
 
-			for res in m.contacts:
-				print res
+				chProt = defaultdict(list)	#chain/uniprots to check ( saving residues )
+				for res in m.contacts:
+					chain = s + res.split('_')[0].lower()
+					chProt[chain].append( res )
 				
+				if len(chProt) == 0 : continue		# no contacts, skip .
+				for u in chProt.keys():
+					try:
+						uPath = os.path.abspath( os.path.join(sys.argv[3], '%s.txt' % inMap[u] ) )
+						print "entering...", uPath 
+						parseUniprot( uPath,  'ZN' , chProt[u])
+						print
+					except KeyError:
+						# What to do when there is no uniprot file!!!
 
-			
 
-
-
-			sys.exit()
+			#sys.exit()
 
 
 
