@@ -100,44 +100,6 @@ chainObj = {}
 
 
 
-########## Metal pair class  ##########
-#Initialize with prody atom objects for metals and list of prody residue objects contacting
-# Tihs class slims down info each atom carries to only store essentials (reduce filesize/RAM used)
-class biMsite():
-	def __init__(self, atom1, atom2, residue_matesList, pdb):
-		self.name = "%s_%s+%s_%s" % ( atom1.getElement(), str( atom1.getIndex() ), atom2.getElement(), str( atom2.getIndex() ) )
-		self.pdb = pdb
-		self.contacts = []
-		#For coordinating residues, loss of metal-res link, but bidentate should be store as 'A_ASP180-OD2+OD1'
-		#self.contacts = [ '%s_%s%s-%s' % ( mate.getChid(), mate.getResname(), str( mate.getResnum() ), mate.getName() ) for mate in residue_matesList ] 
-		for mate in residue_matesList:
-			biFlg = 0
-			fullID 	= '%s_%s%s-%s' % ( mate.getChid(), mate.getResname(), str( mate.getResnum() ), mate.getName() )	 
-			if len( self.contacts ) == 0:
-				self.contacts.append( fullID )
-			else:
-				rBaseId = '%s_%s%s' % ( mate.getChid(), mate.getResname(), str( mate.getResnum() ) ) 
-
-				for c in self.contacts:
-					if c.split('-')[0] == rBaseId:
-						new = c + '+' + mate.getName()
-						old = c
-						biFlg +=1
-				if biFlg > 0 :
-					self.contacts.remove( old )
-					self.contacts.append( new )
-				else:
-					self.contacts.append( fullID )
-
-
-				
-
-	def __repr__(self):
-		return self.name
-
-###### class end ######################
-
-
 ######### Find binuclear sites and store surrounding information #############	
 
 
@@ -231,7 +193,7 @@ def find_sites(pdbs):
 
 #pairsByPdb = find_sites( pdbs )
 #pic.dump(pairsByPdb, open( '/home/xray/tertBuilding/biPairs_byPDB.pkl', 'wb') )
-
+#sys.exit()
 ### Created this hash in the 'find binuclear sites...' section, which is now commented out
 pairsByPdb = pic.load( open( os.path.abspath( os.path.join('./', 'biPairs_byPDB.pkl') ), 'rb') )
 

@@ -11,7 +11,7 @@ helpStr = """
  influence that residues identity/conformation and those also contacting ligand.
 	Input 1: path to original pdb file
 	Input 2: path to Confind --rout rotamer output file (Confind.cpp by Gregoryian from Molecular Software Library, MSL)
-	Input 3: Selection string of Atom serial numbers from ligand (e.g 1-10,35,46,60-100), can be list of index groups as ligand units delimited by ';' (1-10;46,60-100;234)
+	Input 3: Selection string of Atom serial numbers from ligand (e.g 1-10,35,46,60-100)
 	Input 4: --rcut distance shell to consider around ligand, DEFAULT: 7 A (per ligand --rcut feature can be added later) 
 	Input 5: --freqcut joint freqency cutt off of 2 residues contacting ligand DEFAULT: 0.1 (must be >0.1)
 	Input 6: path to contact list file 
@@ -32,8 +32,9 @@ for i in sys.argv:
 
 par = argparse.ArgumentParser()
 par.add_argument('--p', required = True, help = 'input PDB file')
+par.add_argument('--o', required = True, help = 'pathname for .cmap contact map output file')
 par.add_argument('--c', required = True, help = 'path to .cmap contact list file')
-par.add_argument('--lig', required = True, help = 'ligand atom(s)/group(s) serial selection string (inclusive)')
+par.add_argument('--lig', required = True, help = 'ligand atoms serial selection string (inclusive)')
 par.add_argument('--rcut', default = 7.0, help = 'ligand interaction shell cutoff')
 par.add_argument('--freqcut', default = 0.1, help = 'joint ligand interaction frequency cutoff')
 par.add_argument('--rout', required = True, help = 'path to contact file to rewrite')
@@ -99,8 +100,8 @@ class Residue():
 ########### Dictionary for amino acid frequency in Di Zinc data base August 17, 2015
 ## should alter these values to reflect each database, maybe supply equivilant hash in pickle 
 ## Determined by module in my local bin 'PDButil.py': function freqAA()
-aaProp = {}
-{'CYS': 1.19, 'ILE': 5.92, 'SER': 5.34, 'GLN': 3.35, 'LYS': 5.64, 'ASN': 3.91, 'PRO': 4.77, 'THR': 5.51, 
+aaProp = {
+'CYS': 1.19, 'ILE': 5.92, 'SER': 5.34, 'GLN': 3.35, 'LYS': 5.64, 'ASN': 3.91, 'PRO': 4.77, 'THR': 5.51, 
 'PHE': 3.93, 'ALA': 8.62, 'HIS': 2.99, 'HSD': 2.99, 'GLY': 7.75, 'ASP': 6.27, 'LEU': 9.24, 'ARG': 4.52,
 'TRP': 1.34, 'VAL': 7.1, 'GLU': 6.86, 'TYR': 3.46, 'MET': 2.29 }
 
@@ -116,7 +117,9 @@ freqcu 	= args.freqcut
 cmap 	= args.c
 ligStr 	= args.lig
 ligStr 	= parseLigandStr( ligStr )
-print "Entering input PDB"
+outf 	= args.o
+print 
+print "Entering input PDB", pdbf
 
 ### Parse Pdb, using ProDy package, and get input ligand coordinates
 ##  make list of residues (chain,resnum) with heavy atoms within 7 angstroms
@@ -132,19 +135,18 @@ for i in ligStr:
 	lig_number		= pdbGroup.getBySerial( i, i+1 ).getResnums()[0]
 	lig_resID		= pdbGroup.getBySerial( i, i+1 ).getResnames()[0]
 
-
 	ligands.append( Ligand( i, lig_coords, lig_chain, str( lig_number ), lig_resID )  )
 
 	if len( lig_coords ) < 3:
 		print "\nWARNING: No valid coordinates of ligand with serial number", i
 
-	
+
 	cont = Contacts( pdbGroup )
 	# Store all residues (as objects) within rcut (default: 7 Angstroms) from each ligand 
 	for j in cont.select( rcut , lig_coords ):
 
 		ID = j.getChid() + ',' + str( j.getResnum() ) 
-		
+
 		#Only consider natural amino acids (optional?) 
 		if j.getResname() not in aaProp.keys(): continue
 
@@ -221,7 +223,7 @@ with open( routf ) as file:
 
 			else: continue
 
-print "\nDone parsing rotamers and pdb\nCalculating frequency of rotamers contacting ligands...\n"
+print "\nDone parsing rotamers and pdb, %s\nCalculating frequency of rotamers contacting ligands...\n" % ( os.path.splitext( os.path.basename( pdbf ) )[0] )
 # For each residue i, start a frequency sum for each ligand atom; checking if if each rotamer is within 3 Angstroms
 # r_i 				= 	potential rotamer of i
 # lig_j 			= 	ligand of atom serial number j
@@ -232,8 +234,8 @@ print "\nDone parsing rotamers and pdb\nCalculating frequency of rotamers contac
 #####################################################################
 for resi in contactList:
 	for l in ligands:
-		fr 		= 0
-		maxV 	= 0
+		fr 		= 0.0
+		maxV 	= 0.0
 		for name , rotObj in resi.rotamers.items():		
 			# Increase max possible count
 			maxV += rotVals[ name ] * aaProp[ name.split(',')[0] ]
@@ -246,14 +248,20 @@ for resi in contactList:
 			except TypeError:
 				pass		 
 
-		l.contacts.append( ( resi , round( fr/maxV, 5 ) ) )
+		try: 
+			l.contacts.append( ( resi , round( fr/maxV, 5 ) ) )
+		except ZeroDivisionError:
+			l.contacts.append( ( resi , 0.0 ) )
 
+# Write to output file
+oFile = open( outf, 'w' )
 for l in ligands:
-	print "Residues and frequency of potential rotamers contacting ligand atom", l
-	print l, l.identity, l.number, l.chain
+	oFile.write( "Residues and frequency of potential rotamers contacting ligand atom " + l.name + '\n' ) 
+	oFile.write( '%s %s %s %s\n' % ( l.name, l.identity, l.number, l.chain ) )
 	for k in l.contacts:
-		print str( k )  
-	print 
+		if k[1] != 0:
+			oFile.write( str( k ) + '\n' )  
+	print 'Done with %s\n' % (  os.path.splitext( os.path.basename( outf ) )[0]  )  
 
 
 #print r, k, 'rotamer probability:', rotVals[ k ], 'amino acid frq:', aaProp[ k.split(',')[0] ]

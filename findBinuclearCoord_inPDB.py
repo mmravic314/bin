@@ -230,15 +230,11 @@ print len(binuclearPDBs.keys())
 # One pdb's have been retrieved, output a report of the resdiues/chains nearby 
 # as well as a list of uniprot ID's to download(uniprot-pdb mapping in report too)
 
-#Uniprot module written by Kortemme lab Shane O'Connor in tools/bio/ where tools/ is from Klab guybrush.ucsf.edu server & is located in my /home/xray/bin/ 
-#from uniprot import *
-
 
 for p,l in binuclearPDBs.items():
 	print  p, l 
-	#, #uniprot_map('PDB_ID', 'ID', p)
-	#print p
-	#uniprot_map('PDB_ID', 'ID', p)
+
+#Any oddities print out at the end
 print manualMappings
 
 

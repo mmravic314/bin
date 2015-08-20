@@ -2,40 +2,42 @@
 ##################### Written By: Marco Mravic  ###  Degrado Lab UCSF Biophysics Aug 2015
 
 import numpy as np
+from prody import * 
+from collections import Counter
 
-divalent_metals = [
-'BA',
-'BE', 
-'CD', 
-'CA', 
-'CR', 
-'CO', 
-'CU', 
-'EU', 
-'GD', 
-'GE', 
-'FE', 
-'LA', 
-'PD', 
-'MG', 
-'MN', 
-'HG', 
-'NI', 
-'OS', 
-'PT', 
-'RU', 
-'SR', 
-'SN',
-'U', 
-'V', 
-'Y', 
-'ZN' ]
+###################### Globally defined helpers  ####################
+
+divalent_metals = ['BA','BE', 'CD', 'CA', 'CR', 'CO', 'CU', 
+'EU', 'GD', 'GE', 'FE', 'LA', 'PD', 'MG', 'MN', 'HG', 'NI', 
+'OS', 'PT', 'RU', 'SR', 'SN','U', 'V', 'Y', 'ZN' ]
 
 natAA = {}
 natAA["ALA"] = 'A'; natAA["CYS"] = 'C'; natAA["ASP"] = 'D'; natAA["GLU"] = 'E'; natAA["PHE"] = 'F';
-natAA["GLY"] = 'G'; natAA["HIS"] = 'H'; natAA["HSD"] = 'H'; natAA["ILE"] = 'I'; natAA["LYS"] = 'K';
+natAA["GLY"] = 'G'; natAA["HIS"] = 'H'; natAA["ILE"] = 'I'; natAA["LYS"] = 'K';
 natAA["LEU"] = 'L'; natAA["MET"] = 'M'; natAA["ASN"] = 'N'; natAA["PRO"] = 'P'; natAA["GLN"] = 'N';
 natAA["ARG"] = 'R'; natAA["SER"] = 'S'; natAA["THR"] = 'T'; natAA["VAL"] = 'V'; natAA["TRP"] = 'W'; natAA["TYR"] = 'Y';
+
+# Arbitrary amino acid distribution from a database of PDBs
+aaProp = {}
+aaProp["ALA"] = 7.73; aaProp["CYS"] = 1.84; aaProp["ASP"] = 5.82; aaProp["GLU"] = 6.61; aaProp["PHE"] = 4.05;
+aaProp["GLY"] = 7.11; aaProp["HIS"] = 2.35; aaProp["HSD"] = 2.35; aaProp["ILE"] = 5.66; aaProp["LYS"] = 6.27;
+aaProp["LEU"] = 8.83; aaProp["MET"] = 2.08; aaProp["ASN"] = 4.50; aaProp["PRO"] = 4.52; aaProp["GLN"] = 3.94;
+aaProp["ARG"] = 5.03; aaProp["SER"] = 6.13; aaProp["THR"] = 5.53; aaProp["VAL"] = 6.91; aaProp["TRP"] = 1.51; aaProp["TYR"] = 3.54;
+
+## Unnatural/PTM Amino acid converter
+unNatAA = { 'ABA':'ALA', 
+'CSO':'CYS' , 'CSD':'CYS', 'CME':'CYS', 'OCS':'CYS', 
+"HSD":'HIS',
+'KCX':'LYS', 'LLP':'LYS', 'MLY':'LYS', 'M3L':'LYS', 
+'MSE':'MET', 
+'PCA':'PRO', 'HYP':'PRO',
+'SEP':'SER', 'TPO':'THR', 'PTR':'TYR'
+  }
+
+
+#################### End of Global Definitions ####################
+
+
 
 ############### Class def's ##############
 
@@ -131,4 +133,93 @@ class PdbChain():
 		return val
 
 
+########## Metal pair class  ##########
+#Initialize with prody atom objects for metals and list of prody residue objects contacting
+# Tihs class slims down info each atom carries to only store essentials (reduce filesize/RAM used)
+class biMsite():
+	def __init__(self, atom1, atom2, residue_matesList, pdb):
+		self.name = "%s_%s+%s_%s" % ( atom1.getElement(), str( atom1.getSerial() ), atom2.getElement(), str( atom2.getSerial() ) )
+		self.pdb = pdb
+		self.contacts = []
+		#For coordinating residues, loss of metal-res link, but bidentate should be store as 'A_ASP180-OD2+OD1'
+		#self.contacts = [ '%s_%s%s-%s' % ( mate.getChid(), mate.getResname(), str( mate.getResnum() ), mate.getName() ) for mate in residue_matesList ] 
+		for mate in residue_matesList:
+			biFlg = 0
+			fullID 	= '%s_%s%s-%s' % ( mate.getChid(), mate.getResname(), str( mate.getResnum() ), mate.getName() )	 
+			if len( self.contacts ) == 0:
+				self.contacts.append( fullID )
+			else:
+				rBaseId = '%s_%s%s' % ( mate.getChid(), mate.getResname(), str( mate.getResnum() ) ) 
+
+				for c in self.contacts:
+					if c.split('-')[0] == rBaseId:
+						new = c + '+' + mate.getName()
+						old = c
+						biFlg +=1
+				if biFlg > 0 :
+					self.contacts.remove( old )
+					self.contacts.append( new )
+				else:
+					self.contacts.append( fullID )
+
+
+				
+
+	def __repr__(self):
+		return self.name
+
+###### class end ######################
+
+
+
 ####################### Class definitions end #####################
+
+
+############### Functions  ########################################
+
+## Return the count of each amino acid found (includes non-natural) in a PDB model
+def cntAA( pdbPath ):
+	aaList = []
+	print '*'
+	pdbF = parsePDB( pdbPath )
+	print '*'
+
+	for res in pdbF.iterResidues():
+		try:
+			name = unNatAA[ res.getResname() ]
+		except KeyError:
+			name = res.getResname()
+		if name in natAA.keys():
+			aaList.append( name )
+
+	final = Counter ( aaList )	
+
+	return final
+
+# determine the frequency of each amino acids in percent (e.g. 15.6) for a pdb database, given a list file with a path to each file
+def freqAA (pathListFile):
+	freq = Counter([])
+
+	with open( pathListFile ) as file:
+		for i in file:
+			freq.update(   cntAA( i.rstrip() ) )
+			print freq.items()
+			print 
+
+	freq2 = {}		
+	for k,v in freq.items():
+		val = 100 * float(v) / sum( freq.values() )
+		freq2[k] = round(val, 2)
+
+	print freq2.items()
+	print sum( freq2.values() )/100.0
+
+	return freq2
+
+#freqAA( 'localZNdbFiles.txt' )
+
+
+
+
+
+
