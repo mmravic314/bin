@@ -4,8 +4,8 @@
 # Input: list of paths to PDbs to analysis, and definitions of ligand groups for each PDB 
 
 # example command line
-# python  gen_ligandTERMs.py ~/tertBuilding/localZNdbfiles.txt   /home/xray/tertBuilding/biPairs_byPDB.pkl    ~/tertBuilding/zN_rOUT/
-# python  gen_ligandTERMs.py   path2pathlist    path2metal-PDBhash   path2ConfindOUTfiles
+# python  python  ~/bin/gen_ligandTERMs.py ~/tertBuilding/localZNdbFiles.txt   /home/xray/tertBuilding/biPairs_byPDB.pkl    ~/tertBuilding/zN_rOUT/ ~/tertBuilding/zN_freq/
+# python  gen_ligandTERMs.py   path2pathlist    path2metal-PDBhash   path2ConfindOUTfiles  path2dir2writefreqFiles
 
 
 import cPickle as pic, os, sys, subprocess as sp
@@ -23,13 +23,14 @@ scriptPath = os.path.abspath( '/home/xray/bin/add_ligand_contacts_ConfindV2.py' 
 with open( sys.argv[1] ) as file:
 	for i in file:
 		print 'Entering...', i
+
 		pID 		= os.path.splitext( os.path.basename( i.rstrip() )  )[0]
 		pdbPath 	= i.rstrip()
 		cmapPath 	= os.path.join(  os.path.abspath( sys.argv[3] ), '%s.cmap' % (pID) ) 
 		rOutPath 	= os.path.join(  os.path.abspath( sys.argv[3] ), '%s.rout' % (pID) )
 
 
-		for site in pairsByPdb[ pID ]:
+		for site in  pairsByPdb[ pID ]:
 			freq = '0.1'
 			metals = [ filter(lambda x: x.isalpha(), metal ) for metal in site.name.split('+') ] 
 
@@ -42,11 +43,14 @@ with open( sys.argv[1] ) as file:
 			# But should be switch able for other formattings like small molecule ligands. Just grabbing PDB atom index
 			pathStr 	= '-' + '_'.join( [ filter(lambda x: x.isdigit(), metal ) for metal in site.name.split('+') ] )
 			siteStr 	= ','.join( [ filter(lambda x: x.isdigit(), metal ) for metal in site.name.split('+') ] )
-			outputPath 	= os.path.join(  os.path.abspath( sys.argv[3] ), '%s.freq' % ( pID + pathStr ) )
+			outputPath 	= os.path.join(  os.path.abspath( sys.argv[4] ), '%s.freq' % ( pID + pathStr ) )
+
 
 			cmd = [ 'python', scriptPath, '--p', pdbPath, '--rout', rOutPath, '--lig', siteStr, '--rcut', '10', '--freq', freq, '--c', cmapPath, '--o', outputPath ]
 			#print cmd
 			sp.call( cmd )
+
+			
 		
 		#print
 

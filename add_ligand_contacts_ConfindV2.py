@@ -119,7 +119,7 @@ ligStr 	= args.lig
 ligStr 	= parseLigandStr( ligStr )
 outf 	= args.o
 print 
-print "Entering input PDB", pdbf
+print "Entering input PDB", pdbf, ligStr
 
 ### Parse Pdb, using ProDy package, and get input ligand coordinates
 ##  make list of residues (chain,resnum) with heavy atoms within 7 angstroms
@@ -185,7 +185,7 @@ with open( routf ) as file:
 	# Call Auxillary pickle dictionary looking up rotamer library info/probailities 
 	rotVals = pic.load( open('/home/xray/termanal/support.default/rotlib/rotVals.pkl', 'rb' ))
 
-	# And another to read amino acid propensities
+	# Amino acid propensities in hash above
 
 	contactFlag = 0
 
@@ -214,16 +214,23 @@ with open( routf ) as file:
 
 					# build rotamer model
 					rotamer = parsePDB( tmp_path )
+
 					# Find index of this residue's ID (e.g "A,56"; chain,resNumber) corresponding to Residue object in contactList
 					# Store this rotamer AtomGroup (ProDy  object) in Residue object's hash by its rotamer ID (e.g. "ARG,11")
 					contactList[ unique.index( resID ) ].rotamers[ rotID ] = rotamer
 				
 				else: 
+					# heavy atoms only
+					if i[13] == 'H': continue
+					# Store 'ATOM' lines in a tmp file containing rotamer object
 					tempStream.write( i )
 
 			else: continue
 
+
+
 print "\nDone parsing rotamers and pdb, %s\nCalculating frequency of rotamers contacting ligands...\n" % ( os.path.splitext( os.path.basename( pdbf ) )[0] )
+##############################    Frequency Calculation        #######################################
 # For each residue i, start a frequency sum for each ligand atom; checking if if each rotamer is within 3 Angstroms
 # r_i 				= 	potential rotamer of i
 # lig_j 			= 	ligand of atom serial number j
@@ -239,19 +246,19 @@ for resi in contactList:
 		for name , rotObj in resi.rotamers.items():		
 			# Increase max possible count
 			maxV += rotVals[ name ] * aaProp[ name.split(',')[0] ]
-			# Check if there a contact between current rotamer atomGroup object, r_i and current ligand, lig_j
-			# pass if not, count it if so
-			contR = Contacts( rotObj )
-			try :
-				if len( contR.select(3, l.coords) ) > 0:
+			
+			# Check if there a contact between any heavy atom in the current rotamer, r_i and current ligand, lig_j
+			# pass if not, count it if so. Break loop and stop looking at rotamer if contact (< 3 Angstrom) is found
+			for a in rotObj.iterAtoms():
+				if calcDistance( a.getCoords(), l.coords) <= 3:
 					fr += rotVals[ name ] * aaProp[ name.split(',')[0] ]
-			except TypeError:
-				pass		 
-
+					break
 		try: 
 			l.contacts.append( ( resi , round( fr/maxV, 5 ) ) )
 		except ZeroDivisionError:
 			l.contacts.append( ( resi , 0.0 ) )
+
+
 
 # Write to output file
 oFile = open( outf, 'w' )
@@ -261,7 +268,7 @@ for l in ligands:
 	for k in l.contacts:
 		if k[1] != 0:
 			oFile.write( str( k ) + '\n' )  
-	print 'Done with %s\n' % (  os.path.splitext( os.path.basename( outf ) )[0]  )  
+print 'Done with %s\n' % (  os.path.splitext( os.path.basename( outf ) )[0]  )  
 
 
 #print r, k, 'rotamer probability:', rotVals[ k ], 'amino acid frq:', aaProp[ k.split(',')[0] ]
