@@ -219,6 +219,33 @@ def freqAA (pathListFile):
 #freqAA( 'localZNdbFiles.txt' )
 
 
+# Structural clustering using pre-user-defined symmetric distance matrix  
+# Input a threshold level (presumably RMSD-cut off) such that all clusters are within threshold value
+
+def heirarchy_cluster( matrix, threshold_RMSD = 2):
+
+
+	return
+
+
+
+#from scipy.cluster import hierarchy as h
+#import matplotlib.pyplot as plt
+
+
+#matrix = np.random.rand(6,6)
+
+
+
+#tree = h.linkage( matrix, method='ward', metric='euclidean')
+#print matrix
+#print 'linkage'
+#print tree
+
+#h.dendrogram( tree )
+#plt.show()
+#import scipy.spatial.distance as sp_dist
+#import scipy.cluster.hierarchy as sp_clust
 
 
 

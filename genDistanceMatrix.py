@@ -4,7 +4,8 @@
 # ouput a pickle file hash indexed by pairs of PDB name with user given pathname (bulky but user friendly)
 
 
-import sys,os, cPickle as pic#, numpy as np
+import sys,os, cPickle as pic, numpy as np
+
 
 pdbList = []
 rmsdD 	= {}
@@ -15,7 +16,7 @@ for f in os.listdir( sys.argv[1] ):
 		continue
 	pdb = os.path.splitext(f)[0]
 	pdbList.append( pdb )
-	print 'Entering', pdb
+	print 'Entering', f
 	with open( os.path.abspath( os.path.join( sys.argv[1], f)  ) ) as file:
 		for i in file:
 			j 			= i.split()
@@ -26,25 +27,29 @@ for f in os.listdir( sys.argv[1] ):
 			# This should take the closer of two matches if two parts of one fragment matches to the query fragment
 			try:
 				rmsdD[ pairID ]
-			except: 
+			except KeyError: 
 				rmsdD[ pairID ] = bbRMSD
 
 
-	print
+# Fill out distance matrix and hash the pdb pair by indices (indices as tuple)
 
-# Fill out the remaining distance matrix through a o(n^2) check
+lookupDict 	= {}											
+dMatrix 	= np.ones ( ( len( pdbList), len(pdbList) ) )
 
-for i in pdbList:
-	for j in pdbList:
-			pairID 		= tuple( sorted( [ i, j ] ) )
+for i in enumerate( sorted( pdbList ) )  :
+	for j in enumerate( sorted( pdbList ) ) :
+			pairID 		= tuple( sorted( [ i[-1], j[-1] ] ) )
+
 			try:
-				rmsdD[ pairID ]
-			except: 
+				dMatrix[ i[0], j[0] ] = rmsdD[ pairID ]
+				dMatrix[ j[0], i[0] ] = rmsdD[ pairID ]
+				lookupDict[ str( (i[0], j[0]) ) ] = pairID
+				lookupDict[ str( (j[0], i[0]) ) ] = pairID
+
+			except KeyError:
 				rmsdD[ pairID ] = 1.0
+				
 
+pic.dump( dMatrix, open( sys.argv[2], 'wb' ) )
+pic.dump( dMatrix, open( sys.argv[2] + '__lookUpHash' , 'wb' ) )
 
-# Turn hash to distance matrix sorted by python sort function (alphanumeric)
-# Distance matrix is formatted for scikit learn
-
-
-#pic.dump( rmsdD, open( sys.argv[2], 'wb') )
