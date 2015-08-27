@@ -222,30 +222,17 @@ def freqAA (pathListFile):
 # Structural clustering using pre-user-defined symmetric distance matrix  
 # Input a threshold level (presumably RMSD-cut off) such that all clusters are within threshold value
 
-def heirarchy_cluster( matrix, threshold_RMSD = 2):
+def heirarchy_cluster( matrix, threshold_RMSD = 2.0):
+	import scipy.cluster.hierarchy as sp_clust
+
+	# Complete linkage clustering
+	link_matrix = sp_clust.complete( matrix )
+	# Make flat clusters at the tree point where distance threshold is met: default RMSD < 2.0
+	clusters 	= sp_clust.fcluster( link_matrix, threshold_RMSD, criterion = 'distance' )
+
+	return clusters
 
 
-	return
-
-
-
-#from scipy.cluster import hierarchy as h
-#import matplotlib.pyplot as plt
-
-
-#matrix = np.random.rand(6,6)
-
-
-
-#tree = h.linkage( matrix, method='ward', metric='euclidean')
-#print matrix
-#print 'linkage'
-#print tree
-
-#h.dendrogram( tree )
-#plt.show()
-#import scipy.spatial.distance as sp_dist
-#import scipy.cluster.hierarchy as sp_clust
 
 
 

@@ -3,6 +3,7 @@
 # Will likely be sparse, so initialize a cap at 1. All other values will be scalred from 0 - RMSD/3.5 (max distance is 1)
 # ouput a pickle file hash indexed by pairs of PDB name with user given pathname (bulky but user friendly)
 
+# python 
 
 import sys,os, cPickle as pic, numpy as np
 
@@ -50,6 +51,6 @@ for i in enumerate( sorted( pdbList ) )  :
 				rmsdD[ pairID ] = 1.0
 				
 
-pic.dump( dMatrix, open( sys.argv[2], 'wb' ) )
-pic.dump( dMatrix, open( sys.argv[2] + '__lookUpHash' , 'wb' ) )
+pic.dump( dMatrix, 		open( sys.argv[2], 'wb' ) )
+pic.dump( lookupDict, 	open( sys.argv[2] + '__lookUpHash' , 'wb' ) )
 
