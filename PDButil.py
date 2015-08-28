@@ -234,6 +234,35 @@ def heirarchy_cluster( matrix, threshold_RMSD = 2.0):
 
 
 
+def kmedoid_clustering( matrix, threshold_RMSD, lookupHash):
+	from Bio.Cluster.cluster import kmedoids
+	from collections import Counter
+	import time
+
+	cost = 4.0
+	c = 135
+	while cost > threshold_RMSD:
+		trials	= np.size( matrix )
+		start 	= time.time()
+		clust 	= kmedoids( matrix , c, trials)
+		print time.time()-start, 'elapsed for ', c, 'clusters', clust[-1], 'identical trajectory(s) from total',trials,
+		# for this clustering scheme, calculate mean RMSD of each cluster
+		clusterStats = {}
+		index = 0
+		# Look for each RMSD to the cluster centroid, store max within the cluster
+		for p in clust[0]:
+			#print p, index, matrix[p][index]
+			try:
+				clusterStats[p] = max( matrix[p][index], clusterStats[p] )
+			except KeyError:
+				clusterStats[p] = matrix[p][index]
+
+			index += 1
+
+		cost = max( clusterStats.values() )*4.0
+		print 'maximum rmsd: ', cost
+	print Counter( clust[0] )
+	return clust
 
 
 

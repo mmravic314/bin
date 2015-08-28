@@ -10,8 +10,8 @@ from prody import *
 import sys,os, numpy as np
 
 #Example command line
-# 	python ~/bin/writeTERMpdbs.py   diZNtermParams.txt ~/tertBuilding/ZN_db/  zN_freq/ 
-#	python  ~/bin/writeTERMpdbs.py  path2Paramsfile	 path2ZnDatabase	 path2freqDir  
+# 	python ~/bin/writeTERMpdbs.py   diZNtermParams.txt ~/tertBuilding/ZN_db/  zN_freq/ --lig
+#	python  ~/bin/writeTERMpdbs.py  path2Paramsfile	 path2ZnDatabase	 path2freqDir  --flag2includeLigandsinTERMpdb
 
 
 # abspath to original pdb file from first line of local file path list
@@ -45,7 +45,7 @@ class TERM():
 		return self.oPath
 
 	#For residue list in term, write a selection string to query presence of prody atoms
-	def resList2selectionStr(self):
+	def resList2selectionStr(self, ligandStr = '' ):
 		byCh	= defaultdict(list)
 		sel 	= ''
 
@@ -57,7 +57,11 @@ class TERM():
 			sel += 'chain %s resnum ' % (c) + ' '.join( resis ) + ' or '
 
 		#Remove final 'and'
-		sel = sel[:-3]
+		if len( ligandStr ) > 0:
+			sel += ligandStr
+		else:
+			sel = sel[:-3] 
+
 
 		return sel
 
@@ -198,15 +202,23 @@ for f in os.listdir( sys.argv[3] ):
 	#print pPath
 	#print inPdb.select( 'chain A resnum 158 159 160 161 or chain D resnum 1')
 
-	#write a prody selection string for each, and pass selection object to be writen 
+	
+
+	#write a prody selection string for each, and pass selection object to be written 
 	print 'Writing', f, 
 	for n, term in metalSite.items() :
 		print n,
+
 		#print term.rList
 		#print term.resList2selectionStr()
 		#print inPdb.select( term.resList2selectionStr() )
+		
+		if sys.argv[4] == '--lig':
+			ligStr = 'serial ' + ' '.join(  os.path.splitext( f)[0].split('-')[-1].split('_') )
+			writePDB( term.oPath, inPdb.select( term.resList2selectionStr( ligStr ) ) )
 
-		writePDB( term.oPath, inPdb.select( term.resList2selectionStr() ) )
+		else:
+			writePDB( term.oPath, inPdb.select( term.resList2selectionStr() ) )
 
 
 	print 
