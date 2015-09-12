@@ -179,7 +179,7 @@ for f in os.listdir( sys.argv[3] ):
 				if IDdown2 not in resList:
 					resList.append( IDdown2 )
 
-			IDdownV2	= int( r.split(',')[-1] ) - 1
+			IDdownV2	= int( r.split(',')[-1] ) - 2
 			if IDdownV2 >= 0:
 				IDdownV3 = ','.join(  [ r.split(',')[0], str(IDdownV2) ]    ) 
 				if IDdownV3 not in resList:
