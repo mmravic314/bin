@@ -20,7 +20,7 @@ import sys, os, numpy as np, cPickle as pic
 
 # Example command line
 # Run from directory containing pickle files (e.g. ~/tertBuilding/)
-# python ~/bin/binuclearCleanPDB.py ./binuclearDivalentPDB.txt ~/pdb_080615/ ~/binucUniProt/ ~/pdb_chain_uniprot.csv 
+# python ~/bin/binuclearCleanPDB.py ./binuclearDivalentPDB.txt ~/pdb_080615/ ./binucUniProt/ ./pdb_chain_uniprot.csv 
 # python ~/bin/binuclearCleanPDB.py path2PDBchainUniprotList path2PDBfiles path2uniprot path2SIFTS_pdb2uniProt_mapping
 
 ## This function creates a hash (saved to cPickle binary file) containing PdbChain objects (see PDButil.py in my local bin)
@@ -147,6 +147,9 @@ def find_sites(pdbs):
 				# Exclude carbons
 				if mate.getElement() =='C': continue
 
+				# sketchy storage of zn atom index in ligand's mass
+				mate.setBeta( int( atom.getIndex() ) ) 
+
 				coID = '%s, %s%s' % ( mate.getChid(), mate.getResname(), str( mate.getResnum() ) ) 
 				if mate.getResname() not in natAA.keys(): #only allow natural amino acids coordinating for now
 					continue
@@ -184,6 +187,8 @@ def find_sites(pdbs):
 	for k, v in pairs.items():
 		if k[0] in skip: continue
 		if k[1] in skip: continue
+
+		kobe = biMsite( k[0], k[1], v, s )
 		final_PairsV2.append( biMsite( k[0], k[1], v, s )  )
 
 	if len( final_PairsV2 ) != 0:
@@ -191,9 +196,9 @@ def find_sites(pdbs):
 
  return pairsByPdb
 
-#pairsByPdb = find_sites( pdbs )
-#pic.dump(pairsByPdb, open( '/home/xray/tertBuilding/biPairs_byPDB.pkl', 'wb') )
-#sys.exit()
+pairsByPdb = find_sites( pdbs )
+pic.dump(pairsByPdb, open( '/home/xray/tertBuilding/biPairs_byPDB.pkl', 'wb') )
+sys.exit()
 ### Created this hash in the 'find binuclear sites...' section, which is now commented out
 pairsByPdb = pic.load( open( os.path.abspath( os.path.join('./', 'biPairs_byPDB.pkl') ), 'rb') )
 
@@ -389,6 +394,8 @@ cnt = 0
 from collections import defaultdict
 
 
+
+
 for s, c in sorted( pairsByPdb.items() ):
 #	print s, c
 	# for each binuclear site in the set of pdbs
@@ -418,10 +425,13 @@ for s, c in sorted( pairsByPdb.items() ):
 
 
 				for u in chProt.keys():
+
 					try:
 						uPath = os.path.abspath( os.path.join(sys.argv[3], '%s.txt' % inMap[u] ) )
 						print "entering...", uPath 
+
 						if parseUniprot( uPath,  'ZN' , chProt[u], u ): 
+						
 							if s not in zn_dbase:
 								zn_dbase.append(s)
 								print

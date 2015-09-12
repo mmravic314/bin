@@ -145,7 +145,7 @@ class biMsite():
 		#self.contacts = [ '%s_%s%s-%s' % ( mate.getChid(), mate.getResname(), str( mate.getResnum() ), mate.getName() ) for mate in residue_matesList ] 
 		for mate in residue_matesList:
 			biFlg = 0
-			fullID 	= '%s_%s%s-%s' % ( mate.getChid(), mate.getResname(), str( mate.getResnum() ), mate.getName() )	 
+			fullID 	= '%s_%s%s-%s=%s' % ( mate.getChid(), mate.getResname(), str( mate.getResnum() ), mate.getName(), str(int(mate.getBeta()) ) )	 
 			if len( self.contacts ) == 0:
 				self.contacts.append( fullID )
 			else:
@@ -153,7 +153,7 @@ class biMsite():
 
 				for c in self.contacts:
 					if c.split('-')[0] == rBaseId:
-						new = c + '+' + mate.getName()
+						new = c.split('=')[0] + '+' + mate.getName() + '=' + str(int(mate.getBeta()) ) + '=' + c.split('=')[-1]
 						old = c
 						biFlg +=1
 				if biFlg > 0 :
