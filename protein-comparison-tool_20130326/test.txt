@@ -1,0 +1,27 @@
+<AFPChain name1="df1L13G_HTH-1_28chB.pdb" name2="1AH7-007_005-0206_0242_A_0172_0189_A.pdb" method="jCE" version="1.1" alnLength="20" blockNum="1" gapLen="0" optLength="20" totalLenIni="21" alignScore="49.52" chainRmsd="0.60" identity="0.0000" normAlignScore="0.00" probability="2.83e+00" similarity="0.2000" similarity1="95" similarity2="36" totalRmsdIni="0.40" totalRmsdOpt="0.60" ca1Length="21" ca2Length="55" afpNum="1" alignScoreUpdate="0.00" time="121">
+  <block blockNr="0" blockSize="0" blockScore="0.00" blockRmsd="0.60" blockGap="0">
+    <eqr eqrNr="0" pdbres1="29" chain1="B" pdbres2="11" chain2="B" />
+    <eqr eqrNr="1" pdbres1="30" chain1="B" pdbres2="12" chain2="B" />
+    <eqr eqrNr="2" pdbres1="31" chain1="B" pdbres2="13" chain2="B" />
+    <eqr eqrNr="3" pdbres1="32" chain1="B" pdbres2="14" chain2="B" />
+    <eqr eqrNr="4" pdbres1="33" chain1="B" pdbres2="15" chain2="B" />
+    <eqr eqrNr="5" pdbres1="34" chain1="B" pdbres2="16" chain2="B" />
+    <eqr eqrNr="6" pdbres1="35" chain1="B" pdbres2="17" chain2="B" />
+    <eqr eqrNr="7" pdbres1="36" chain1="B" pdbres2="18" chain2="B" />
+    <eqr eqrNr="8" pdbres1="37" chain1="B" pdbres2="19" chain2="B" />
+    <eqr eqrNr="9" pdbres1="38" chain1="B" pdbres2="20" chain2="B" />
+    <eqr eqrNr="10" pdbres1="39" chain1="B" pdbres2="21" chain2="B" />
+    <eqr eqrNr="11" pdbres1="40" chain1="B" pdbres2="22" chain2="B" />
+    <eqr eqrNr="12" pdbres1="41" chain1="B" pdbres2="23" chain2="B" />
+    <eqr eqrNr="13" pdbres1="42" chain1="B" pdbres2="24" chain2="B" />
+    <eqr eqrNr="14" pdbres1="43" chain1="B" pdbres2="25" chain2="B" />
+    <eqr eqrNr="15" pdbres1="44" chain1="B" pdbres2="26" chain2="B" />
+    <eqr eqrNr="16" pdbres1="45" chain1="B" pdbres2="27" chain2="B" />
+    <eqr eqrNr="17" pdbres1="46" chain1="B" pdbres2="28" chain2="B" />
+    <eqr eqrNr="18" pdbres1="47" chain1="B" pdbres2="29" chain2="B" />
+    <eqr eqrNr="19" pdbres1="48" chain1="B" pdbres2="30" chain2="B" />
+    <matrix mat11="-0.877507" mat12="0.151507" mat13="-0.455002" mat21="0.159410" mat22="0.986985" mat23="0.021213" mat31="0.452294" mat32="-0.053917" mat33="-0.890238" />
+    <shift x="-3.055" y="-7.563" z="60.687" />
+  </block>
+</AFPChain>
+

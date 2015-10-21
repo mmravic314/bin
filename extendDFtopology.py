@@ -1,7 +1,7 @@
 ## From helical pairs with one helix aligned to DF1, and the other helix is splayed relative to original 4-helix bundle
 ## Perform MASTER search to find close backbone matches in PDB to helical interface. Use to fuse backbone of matches, extending helices
 
-# python ~/bin/extendDFtopology
+# python ~/bin/extendDFtopology.py ~/splayBundle/c6-splayfit-queries.txt ~/splayBundle/pairs_Cluster-006 ~/bin/  ~/splayBundle/df1L13G-DIMERCenteredX.pdb  ~/bin/protein-comparison-tool_20130326/runCE.sh
 
 from prody import *
 import numpy as np, sys, subprocess as sp, os
@@ -10,13 +10,15 @@ import numpy as np, sys, subprocess as sp, os
 # input directory containing PDB's on the list (must all be in same dir)
 # input path to master directory (including MASTER binary and create PDB directory)
 # input path to template pdb file of DF1 dimer (referred to as target)
+# input path to jCE align directory (to make C2 symmetric 'coiled coil bundle')
 
 searchDir = os.path.join( os.path.dirname( sys.argv[4] ), 'extSearch/' )
 if not os.path.exists( searchDir ):
 	os.mkdir( searchDir )
 
 # Load target PDB
-target = parsePDB( sys.argv[4],  subset = 'bb' )
+target 			= parsePDB( sys.argv[4],  subset = 'bb' )
+
 
 # Store filepath as index that looks up tuple of the 'prody' style selection strings for mobile and target backbone atoms to make in query PDB
 hashMobile = []
@@ -47,18 +49,37 @@ with open( sys.argv[1] ) as file:
 		writePDB( oPath, oStruct )
 
 		# write PDS query file
-		cmd = [ os.path.join( sys.argv[3], 'createPDS' ), '--type', 'query', '--pdb', oPath ]
-		print
-		sp.call( cmd )
+		#cmd = [ os.path.join( sys.argv[3], 'createPDS' ), '--type', 'query', '--pdb', oPath ]
+		#print cmd
+		#sp.call( cmd[0] )
 		print 
 
-		# C2 symmetric operations on object (via DF1 constant chain superposition)
+		### C2 symmetric operations on object (via DF1 constant chain superposition)
+		# replicate atom group, Change chain IDs (from AB to CD) set outfile path
 		oStructSym	= oStruct.copy()
-		selStrTarSym= 'chain %s resnum %s' %  (  "A" , ' '.join( [ str(x) for x in np.arange(  int( i.split()[5].split('-')[0] ), 1 + int( i.split()[5].split('-')[-1] )  ) ] )  )
-		symTargSeg 	= target.select( selStrTarSym )
+		oStructSym.setChids
+		oPathSym 	= os.path.join( searchDir, basname[:-4] + '-SYM_%s.pdb' % ( i.split()[3] ) )
 
+		# load atom group containing the C2 symmetry mate of DF1 helix (resi 27-48) segment 
+		selStrTarSym	= 'chain %s resnum %s' %  (  "A" , ' '.join( [ str(x) for x in np.arange(  int( i.split()[5].split('-')[0] ), 1 + int( i.split()[5].split('-')[-1] )  ) ] )  )
+		symTargSeg 		= target.select( selStrTarSym )
+		#symPath 		= os.path.join( os.path.dirname( sys.argv[4] ), 'tmpTSym.pdb' )
+		#writePDB( symPath , symTargSeg )
+
+		# Calculate transformation matrix for C2 symmetry mate, minimizing RMSD
+		# then apply matrix to splay(mobile) + target
+		aligned		= superpose(  targetSeg, target.select( selStrTarSym ) )
+#		print calcRMSD( target.select( selStrTarSym ).getCoords() , target=aligned[0].getCoords() )
+		oStructSym 	= applyTransformation( aligned[1], oStructSym )
 		
+		# Manipulate/join prody atom groups to have C2 mate of splay(mobile) + target object; save file
+		writePDB( 'tmpOsym.pdb' , oStructSym ) 
+		oStructSym	= parsePDB( 'tmpOsym.pdb' )
+		c2_coil 	= oStruct + oStructSym
+		writePDB( oPathSym , c2_coil )
+
+		break
 		
 
 		print 
-		#break
+
