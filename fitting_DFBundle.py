@@ -1,5 +1,5 @@
 
-import sys, os, subprocess as sp, cPickle as pic, numpy as np
+import sys, os, subprocess as sp, cPickle as pic, numpy as np, time
 from prody import *
 from PDButil import *
 
@@ -35,21 +35,22 @@ if not os.path.exists( fragDir ):
 
 
 ### commented out section used to write mobile PDB paths to list
-#listF = open( 'list_%s.txt' % ( sys.argv[2].split('/')[-1] ) , 'w' )
-#for f in os.listdir( sys.argv[2] ):
-#		mobilePath 	= os.path.join( os.path.abspath( sys.argv[2] ), f )
-#		print mobilePath
-#		listF.write( mobilePath + '\n')
+listF = open( 'list_%s.txt' % ( sys.argv[2].split('/')[-1] ) , 'w' )
+for f in os.listdir( sys.argv[2] ):
+		mobilePath 	= os.path.join( os.path.abspath( sys.argv[2] ), f )
+		print mobilePath
+		listF.write( mobilePath + '\n')
 
 		# Renumber/rewrite all the helical pairs in the cluster from 1 to n
 		# instead of starting from 1 on each chain
-#		pdb 	= parsePDB( mobilePath )
-#		length 	= 1 
-#		for r in pdb.iterResidues():
-#			r.setResnum( length )
-#			length += 1
-#		writePDB( mobilePath, pdb )
+		pdb 	= parsePDB( mobilePath )
+		length 	= 1 
+		for r in pdb.iterResidues():
+			r.setResnum( length )
+			length += 1
+		writePDB( mobilePath, pdb )
 #sys.exit()
+time.sleep(2)
 
 
 ## Do CE backbone alignments to DF helix B. Write PDB files in match directory if length is > 10 & RMSD < 2
@@ -111,12 +112,12 @@ with open( 'list_%s.txt' % ( sys.argv[2].split('/')[-1] ) ) as file:
 		mtchDict[ key ] = matchVal		# Indexed by mobile's pdb name, without the file extension
 
 
-pic.dump( mtchDict, open( '/Users/mmravic/splayBundle/mtchInfo-C6-v2.pkl' ,'wb' ) )
+pic.dump( mtchDict, open( '/Users/mmravic/splayBundle/mtchInfo-C%s.pkl' % ( sys.argv[2][-1] ) ,'wb' ) )
 
 
 # After writing good matches to PDB (See below), clear any that clash with the DF A helix 
 targetPair		= parsePDB(  os.path.join( '/Users/mmravic/splayBundle', sys.argv[1]) , subset = 'bb', chain = 'A' )		# Df1 helix A, not the matched template
-mtchDict		= pic.load( open( '/Users/mmravic/splayBundle/mtchInfo-C6-v2.pkl' ,'rb' ) )
+mtchDict		= pic.load( open( '/Users/mmravic/splayBundle/mtchInfo-C%s.pkl' % ( sys.argv[2][-1] ),'rb' ) )
 fastaMatch 		= open( sys.argv[1][:-4] + '.fasta', 'a' )
 
 
@@ -179,12 +180,16 @@ for f in os.listdir( matchDir ):
 
 
 	# Record all resdiues from aligned helix and 'close' residues on incident helix form mobile, to rewrite PDB
-	for a in contact.iterAtoms():
-		ID = ( a.getResnum(), a.getChid() )
-		if ID in clashing:
-			continue
-		if ID not in mobileLabels:
-			mobileLabels.append( ID )
+	try:
+		for a in contact.iterAtoms():
+			ID = ( a.getResnum(), a.getChid() )
+			if ID in clashing:
+				continue
+			if ID not in mobileLabels:
+				mobileLabels.append( ID )
+	except AttributeError:
+		print
+		continue
 
 	# if interacting portion of indicent helix length <8 residues, forget alignment and match 
 	if len( mobileLabels ) < 12: 

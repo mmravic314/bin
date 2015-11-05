@@ -77,8 +77,7 @@ with open( sys.argv[1] ) as file:
 		oStructSym	= parsePDB( 'tmpOsym.pdb' )
 		c2_coil 	= oStruct + oStructSym
 		writePDB( oPathSym , c2_coil )
-
-		break
+		print 'wrote',  oPathSym
 		
 
 		print 

@@ -50,7 +50,7 @@ def angle( mobile, vertex, origin ):
 #### Function def's end  ########
 
 # python ~/bin/analyzeSplayGeo.py ~/splayBundle/ df1L13G_targetPair001.pdb
-# python ~/bin/analyzeSplayGeo.py ~/splayBundle/df1L13G-DIMER.pdb ~/splayBundle/pairs_Cluster-006 ~/splayBundle/mtchInfo-C6-v2.pkl ~/bin/PS
+#  python ~/bin/analyzeSplayGeo.py ~/splayBundle/df1L13G-DIMERCenteredX.pdb ~/splayBundle/pairs_Cluster-001 ~/splayBundle/mtchInfo-C1.pkl ~/bin/PS
 # Path to centered dimer, path to aligned PDBs, path to pickled hash of alignment info, path to PS binary
 
 # import target helices B and B from different chains (resi 27-28), target from alignment (centered 0,0,0,)
@@ -87,7 +87,8 @@ for i in outTar.split('\n'):
 		#print i 
 		#axis.write( i + '\n' )
 	if i[:15] == ' Sphere radius:':
-		radCurve = int( round( float( i.split()[-2] ), 0 ) )
+		radCurve = int( round( float( i.split()[2] ), 0 ) )
+
 #axis.close()
 targetInt = np.array( XYpoint( coords, radCurve ) )
 
@@ -104,19 +105,20 @@ wtAng = round( angle(  WTsplayInt, targetInt, np.zeros(3) ) * 180/np.pi , 3 )
 
 # Determine if angle is positive or negative
 
-#print calcCenter( target )
+print calcCenter( target )
 refAngle = round( angle(  WTsplayInt, targetInt, calcCenter( target ) ) * 180/np.pi, 3 )
 
 if refAngle > 90:
 	wtAng = 360 - wtAng
 print 'WT splay angle:', wtAng
 
+
 angleData = []
 step = 0
-#angleDataFile = open( 'c6-angleLog.txt', 'w' )
+angleDataFile = open( 'c%s-angleLog.txt' % ( sys.argv[2].strip()[-1] ), 'w' )
 # find helical axis in fit helices
 for f in os.listdir( sys.argv[2] ):
-	break
+	#break
 	if f[-4:] != '.pdb':
 		continue
 	path 	= os.path.join( sys.argv[2], f )
@@ -170,11 +172,11 @@ for f in os.listdir( sys.argv[2] ):
 
 	print ang, refAngle, f, radCurve, intersect, step 
 	step += 1
-	angleData.append( ang )
+	#angleData.append( ang )
 	angleDataFile.write( str(ang) + '\t' + f + '\n' )
 #angleData = np.array( angleData )
 #angleDataFile.close()
-with open( 'c6-angleLog.txt' ) as file:
+with open( 'c%s-angleLog.txt' % ( sys.argv[2].strip()[-1] ) ) as file:
 	for i in file:
 		angleData.append( float( i.split()[0] ) )
 
@@ -185,7 +187,7 @@ n, bins, patches = plt.hist( angleData , 50, facecolor='green', alpha=0.75)
 plt.xlabel('Angle splayed from bundle')
 plt.ylabel('Counts')
 plt.title(r'$\mathrm{Histogram\ of\ Splay Angles:}$')
-plt.axis([0, 360, 0, 10])
+plt.axis([0, 360, 0, 20])
 plt.grid(True)
 
 plt.show()
