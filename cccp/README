@@ -1,0 +1,15 @@
+CCCP (Coiled-Coil Crick Parameterization) is an open-source suite for 
+fitting optimal Crick parameters to protein backbones and generating 
+ideal coiled-coil backbones from Crick parameters.
+Copyright (C) 2011 Gevorg Grigoryan
+
+Web site: http://www.grigoryanlab.org/cccp/
+
+If used in a scientific publication, please cite:
+G. Grigoryan, W. F. DeGrado, "Probing Designability via a Generalized 
+Model of Helical Bundle Geometry", J. Mol. Biol., 405(4): 1079-1100 (2011)
+
+Contact:
+Gevorg Grigoryan
+gevorg.grigoryan@dartmouth.edu
+Dartmouth College
