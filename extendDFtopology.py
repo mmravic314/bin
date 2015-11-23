@@ -8,11 +8,11 @@ import numpy as np, sys, subprocess as sp, os
 
 # input text file containing name of PDB and residue ranges (referred to as mobile)
 # input directory containing PDB's on the list (must all be in same dir)
-# input path to master directory (including MASTER binary and create PDB directory)
+# input path to master directory (including MASTER binary and create PDB directory) OBSOLETE
 # input path to template pdb file of DF1 dimer (referred to as target)
-# input path to jCE align directory (to make C2 symmetric 'coiled coil bundle')
+# input path to octave/mathlab function for fitting coiled-coil backbones
 
-searchDir = os.path.join( os.path.dirname( sys.argv[4] ), 'extSearch/' )
+searchDir = os.path.join( os.path.dirname( sys.argv[4] ), '%s_extSearch/' % ( sys.argv[2][-1:].strip() ) )
 if not os.path.exists( searchDir ):
 	os.mkdir( searchDir )
 
@@ -46,7 +46,7 @@ with open( sys.argv[1] ) as file:
 		targetSeg 	= parsePDB( 'tmpT.pdb' )
 		oStruct		= mobileSeg + targetSeg
 	
-		writePDB( oPath, oStruct )
+		#writePDB( oPath, oStruct )
 
 		# write PDS query file
 		#cmd = [ os.path.join( sys.argv[3], 'createPDS' ), '--type', 'query', '--pdb', oPath ]
@@ -69,16 +69,45 @@ with open( sys.argv[1] ) as file:
 		# Calculate transformation matrix for C2 symmetry mate, minimizing RMSD
 		# then apply matrix to splay(mobile) + target
 		aligned		= superpose(  targetSeg, target.select( selStrTarSym ) )
-#		print calcRMSD( target.select( selStrTarSym ).getCoords() , target=aligned[0].getCoords() )
+		# print calcRMSD( target.select( selStrTarSym ).getCoords() , target=aligned[0].getCoords() )
 		oStructSym 	= applyTransformation( aligned[1], oStructSym )
+
+		for x in oStructSym:
+			if x.getChid() == 'A':
+				x.setChid( 'D' )
+			else:
+				x.setChid( 'C' )
+
+
 		
-		# Manipulate/join prody atom groups to have C2 mate of splay(mobile) + target object; save file
+		# Manipulate/join prody atom groups to have C2 mate of splay(mobile) + target object; 
+		# Exit each segment to have unqique chain ID for coiled-coil fitting; save file
 		writePDB( 'tmpOsym.pdb' , oStructSym ) 
 		oStructSym	= parsePDB( 'tmpOsym.pdb' )
 		c2_coil 	= oStruct + oStructSym
+
+
 		writePDB( oPathSym , c2_coil )
 		print 'wrote',  oPathSym
 		
 
+		## perform fits of coiled coil backbone with octave (DOESN't WORK!)
+		##outTxtPath 	= oPathSym[:-4]
+		#args 		= ','.join( [ '\'%s\'' % (oPathSym), '4', '\'GENERAL\'', '1', '\'%s\'' % ('tmp'), '[]', '[]', '[]', '[]' ] )
+		#fitCMD		= [ 'octave', '--silent', '--eval', '\"fcrick(%s)\"' % ( args ) ]
+		##print fitCMD 
+		#print
+	#	sp.call( fitCMD )
+
+		#sys.exit()
+
 		print 
+os.remove( 'tmpOsym.pdb' )
+os.remove( 'tmpM.pdb' )
+os.remove( 'tmpT.pdb' )
+#os.remove( oPath )
+
+## perform fits
+#fcrick("df1L13G-DIMERcccp.pdb",4,'GENERAL',1,0.5,[],[],[],[])
+
 
