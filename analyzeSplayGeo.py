@@ -1,7 +1,7 @@
 # analyze geometry of CLuster 6 (SOL) helica pairs to DF1-L13A resi 27-48 [helix 2] 
 #(that dont clash to helix 1 resi 1-24)
 
-# Define center of mass to helix 1 and 2. Then find point on fit 'incident' helix  that crosses 
+# Define center of mass to helix 1 and 2 (back-sde reference helices). Then find point on fit 'incident' helix  that crosses 
 # center of mass in z direction. Find angle in x-y plane between three helical axes. 
 # find/plot crossing angle & dZ to center of mass
 
@@ -50,6 +50,7 @@ def angle( mobile, vertex, origin ):
 #### Function def's end  ########
 
 # python ~/bin/analyzeSplayGeo.py ~/splayBundle/ df1L13G_targetPair001.pdb
+
 #  python ~/bin/analyzeSplayGeo.py ~/splayBundle/df1L13G-DIMERCenteredX.pdb ~/splayBundle/pairs_Cluster-001 ~/splayBundle/mtchInfo-C1.pkl ~/bin/PS
 # Path to centered dimer, path to aligned PDBs, path to pickled hash of alignment info, path to PS binary
 
@@ -115,7 +116,7 @@ print 'WT splay angle:', wtAng
 
 angleData = []
 step = 0
-angleDataFile = open( 'c%s-angleLog.txt' % ( sys.argv[2].strip()[-1] ), 'w' )
+angleDataFile = open( 'tm-c%s-angleLog.txt' % ( sys.argv[2].strip()[-1] ), 'w' )
 # find helical axis in fit helices
 for f in os.listdir( sys.argv[2] ):
 	#break
@@ -124,6 +125,7 @@ for f in os.listdir( sys.argv[2] ):
 	path 	= os.path.join( sys.argv[2], f )
 	
 	aligned = parsePDB( path )
+
 	span 	= mtchDict[ f.split('_aligned')[0] ][-1].split('_') 
 	span  	= np.arange( int( span[0] ), int( span[-1] ) + 1 )
 
@@ -176,7 +178,9 @@ for f in os.listdir( sys.argv[2] ):
 	angleDataFile.write( str(ang) + '\t' + f + '\n' )
 #angleData = np.array( angleData )
 #angleDataFile.close()
-with open( 'c%s-angleLog.txt' % ( sys.argv[2].strip()[-1] ) ) as file:
+
+
+with open( 'tm-c%s-angleLog.txt' % ( sys.argv[2].strip()[-1] ) ) as file:
 	for i in file:
 		angleData.append( float( i.split()[0] ) )
 
@@ -187,7 +191,7 @@ n, bins, patches = plt.hist( angleData , 50, facecolor='green', alpha=0.75)
 plt.xlabel('Angle splayed from bundle')
 plt.ylabel('Counts')
 plt.title(r'$\mathrm{Histogram\ of\ Splay Angles:}$')
-plt.axis([0, 360, 0, 20])
+plt.axis([0, 360, 0, 10])
 plt.grid(True)
 
 plt.show()

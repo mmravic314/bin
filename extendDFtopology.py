@@ -1,5 +1,5 @@
 ## From helical pairs with one helix aligned to DF1, and the other helix is splayed relative to original 4-helix bundle
-## Perform MASTER search to find close backbone matches in PDB to helical interface. Use to fuse backbone of matches, extending helices
+## (DOESNT DO THIS) Perform MASTER search to find close backbone matches in PDB to helical interface. Use to fuse backbone of matches, extending helices
 
 # python ~/bin/extendDFtopology.py ~/splayBundle/c6-splayfit-queries.txt ~/splayBundle/pairs_Cluster-006 ~/bin/  ~/splayBundle/df1L13G-DIMERCenteredX.pdb  ~/bin/protein-comparison-tool_20130326/runCE.sh
 
@@ -12,7 +12,7 @@ import numpy as np, sys, subprocess as sp, os
 # input path to template pdb file of DF1 dimer (referred to as target)
 # input path to octave/mathlab function for fitting coiled-coil backbones
 
-searchDir = os.path.join( os.path.dirname( sys.argv[4] ), '%s_extSearch/' % ( sys.argv[2][-1:].strip() ) )
+searchDir = os.path.join( os.path.dirname( sys.argv[4] ), 'tm%s_extSearch/' % ( sys.argv[2][-1:].strip() ) )
 if not os.path.exists( searchDir ):
 	os.mkdir( searchDir )
 
@@ -22,11 +22,16 @@ target 			= parsePDB( sys.argv[4],  subset = 'bb' )
 
 # Store filepath as index that looks up tuple of the 'prody' style selection strings for mobile and target backbone atoms to make in query PDB
 hashMobile = []
+
+
+
 with open( sys.argv[1] ) as file:
 	for i in file:
+
 		if i[0] == '#': continue
 
 		basname 	= i.split()[1] 
+		print basname
 
 		selStrMob 	= 'chain %s resnum %s' %  (  i.split()[2] , ' '.join( [ str(x) for x in np.arange(  int( i.split()[3].split('-')[0] ), 1 + int( i.split()[3].split('-')[-1] )  ) ]  ) )  
 		selStrTar 	= 'chain %s resnum %s' %  (  i.split()[4] , ' '.join( [ str(x) for x in np.arange(  int( i.split()[5].split('-')[0] ), 1 + int( i.split()[5].split('-')[-1] )  ) ] )  )
@@ -92,22 +97,30 @@ with open( sys.argv[1] ) as file:
 		
 
 		## perform fits of coiled coil backbone with octave (DOESN't WORK!)
-		##outTxtPath 	= oPathSym[:-4]
+		#outTxtPath 	= oPathSym[:-4]
 		#args 		= ','.join( [ '\'%s\'' % (oPathSym), '4', '\'GENERAL\'', '1', '\'%s\'' % ('tmp'), '[]', '[]', '[]', '[]' ] )
 		#fitCMD		= [ 'octave', '--silent', '--eval', '\"fcrick(%s)\"' % ( args ) ]
-		##print fitCMD 
+		#print fitCMD 
 		#print
-	#	sp.call( fitCMD )
+		#sp.call( fitCMD )
 
-		#sys.exit()
+		
 
 		print 
-os.remove( 'tmpOsym.pdb' )
-os.remove( 'tmpM.pdb' )
-os.remove( 'tmpT.pdb' )
+
+try:
+	os.remove( 'tmpOsym.pdb' )
+	os.remove( 'tmpM.pdb' )
+	os.remove( 'tmpT.pdb' )
+except OSError:
+	pass
 #os.remove( oPath )
 
 ## perform fits
 #fcrick("df1L13G-DIMERcccp.pdb",4,'GENERAL',1,0.5,[],[],[],[])
+###
+##
+# from #~/bin/cccp/:
+# octave --silent --eval "fcrick('/Users/mmravic/splayBundle/tm1_extSearch/1m0l-008_007-0040_0062_B_0008_0030_B_aligned-SYM_34-46.pdb',4,'GENERAL',1,'tmp',[],[],[],[])"
 
 
