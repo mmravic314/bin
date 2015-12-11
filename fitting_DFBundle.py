@@ -1,3 +1,25 @@
+'''
+###  1) from input directory of helical pairs from Zhang et al 2015, Structure
+###  find best alignment of a pair onto 1 back-de reference helix, that doesn't clash w/ other ref helix
+###  "mobile" helix of each pair aligns to target helix of input df1 PDB, and the unaligned helix of pair is "incident helix"
+###  incident helix will have some crossing angle to center of mass between 2 back-side refernce helices: splay angle
+##### OUTPUTS ###
+## Writes directory of aligned PDBs of most closely interacting interface'pairs_$input_dir_name/'
+## a list containing input file paths
+## another tmp directory of aligned full matches, before some are removed for size of interface, clashes, etc
+## alignment-based sequence alingment of mobile helices (not used downstream)
+### INPUT ####### 
+## 1) target PDB
+## 2) path to list .txt file with one path per PDB to align to target
+## 3) path to runCE.sh (CE must be in original directory)
+## DO NOT PUT FINAL FORWARD SLASH ON INPUT PATHS TO DIRECTORIES
+## unfortunately the matching pickle file storing a hash about interface residues is hardcoded based on last character of input dir
+
+### Bash sample input
+
+> python ~/bin/fitting_DFBundle.py ~/splayBundle/df1L13G_targetPair001CENz.pdb ~/splayBundle/tmCluster-001 ~/bin/protein-comparison-tool_20130326/runCE.sh 
+'''
+
 
 import sys, os, subprocess as sp, cPickle as pic, numpy as np, time
 from prody import *
@@ -120,7 +142,9 @@ targetPair		= parsePDB(  os.path.join( '/Users/mmravic/splayBundle', sys.argv[1]
 mtchDict		= pic.load( open( '/Users/mmravic/splayBundle/mtchInfo-C%s.pkl' % ( sys.argv[2][-1] ),'rb' ) )
 fastaMatch 		= open( sys.argv[1][:-4] + '.fasta', 'a' )
 
-
+print "\n\n#############################################"
+print "WRITING PDB FILES & CHECKING MATCH ELIGIBLITY"
+print "#############################################\n\n"
 
 # Write aligned fasta files and aligned PDB files containing only relevant regions
 for f in os.listdir( matchDir ):
@@ -170,12 +194,13 @@ for f in os.listdir( matchDir ):
 		otherChainMobile = 'A'
 	contact = mobile.select( 'backbone chain %s and within 15 of %s' % ( otherChainMobile, mobSelStr ) )
 
-	## Disclude any residues with backbone atoms 7 Angstroms from DF helix A
-	clashing= mobile.select( 'backbone chain %s and within 7 of targetPair' % ( otherChainMobile), targetPair = targetPair   )
+	## Disclude any residues with backbone atoms 6 Angstroms from DF helix A
+	clashing= mobile.select( 'backbone chain %s and within 6 of targetPair' % ( otherChainMobile), targetPair = targetPair   )
 	try:
 		clashing = [ ( a.getResnum(), a.getChid() ) for a in clashing.iterAtoms() ]
 
 	except AttributeError:
+		print "Backbone within 6 A of target helices"
 		clashing = []
 
 
@@ -188,7 +213,7 @@ for f in os.listdir( matchDir ):
 			if ID not in mobileLabels:
 				mobileLabels.append( ID )
 	except AttributeError:
-		print
+		print "No contacting atoms"
 		continue
 
 	# if interacting portion of indicent helix length <8 residues, forget alignment and match 
