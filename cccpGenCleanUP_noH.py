@@ -28,6 +28,9 @@ def rosCCprep( lines ):
 
 		if l[12:16].strip() == 'CB': continue
 
+
+
+
 		
 		lineList = [
 				l[0:6],
@@ -46,7 +49,13 @@ def rosCCprep( lines ):
 				[x for x in l[12:16] if x in elements ][0], 
 				'    '
 				]
-
+				# if weird values for coordinates found, bail on this file
+		try:
+			if np.fabs( float( l[30:38] ) ) > 60 or np.fabs( float( l[38:46]) ) > 60 or np.fabs( float( l[46:54] ) ) > 60:
+				print 
+				return 'null'
+		except ValueError:
+				return 'null'
 		outStr = '{:<6}{:>5} {:<4}{:<1}{:<3} {:<1}{:>4}{:<1}   {:>8}{:>8}{:>8}{:>6}{:>6}          {:>2}{:>2}\n'.format( *lineList )
 		#print outStr
 		cleanStr+= outStr
@@ -74,7 +83,10 @@ for f in os.listdir( sys.argv[1] ):
 	inFile 		= open( oldPath, 'rU' )
 	outStr 		= rosCCprep( inFile.readlines() )
 	inFile.close( )
-
+	
+	# Write new version of file, unless an anomoly was found 
+	if outStr == 'null':
+		continue
 	newfile		= open( newPath, 'w' )
 	newfile.write( outStr )
 	newfile.close()
