@@ -38,22 +38,19 @@ sumStr = ''
 
 ## SKIP ALREADY DONE DIRECTORY 
 ### Note this is ghetto way to parallelize using 4 cores locally
-lists = ['/home/xray/splayBundle/tmBBsplay/1m0l_1E_bb/',
-'/home/xray/splayBundle/tmBBsplay/1m0l_6E_bb/',
+lists = [
 '/home/xray/splayBundle/tmBBsplay/1v55_1D_bb/',
 '/home/xray/splayBundle/tmBBsplay/1v55_6C_bb/',
-'/home/xray/splayBundle/tmBBsplay/2uuh_1A_bb/',
-'/home/xray/splayBundle/tmBBsplay/3bz1_6B_bb/',
-'/home/xray/splayBundle/tmBBsplay/3v5u_6A_bb/',
 '/home/xray/splayBundle/tmBBsplay/4dji_1C_bb/',
-'/home/xray/splayBundle/tmBBsplay/4gc0_1B_bb/']
+'/home/xray/splayBundle/tmBBsplay/4gc0_1B_bb/'
+]
 
 
-#if sys.argv[1] in [ lists[0],  lists[1],  lists[2],  lists[3],  lists[4] ]:
-#	sys.exit()
-
-if sys.argv[1] in [ lists[0],  lists[5],  lists[6],  lists[7],  lists[8] ]:
+if sys.argv[1] not in lists:
 	sys.exit()
+
+#if sys.argv[1] in [ lists[0],  lists[5],  lists[6],  lists[7],  lists[8] ]:
+#	sys.exit()
 
 
 #### End ghetto section #############
@@ -82,7 +79,7 @@ for filename in os.listdir( sys.argv[1] ):
 		print newPath
 		try: 
 			writePDB( newPath, pdb.select( v )  )
-		except AttributeError:
+		except:
 			break
 		# 2) convert to pds
 		cPDSpath 	= os.path.join( sys.argv[2], 'createPDS' )

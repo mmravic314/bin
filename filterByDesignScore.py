@@ -17,12 +17,14 @@ selDict = {
 			'CD': ( 'chain C resnum 14 to 25', 'chain D resnum 14 to 25' )
 			}
 
+
+
 def filterCoords():
 
 	return 
 
 header = '''###SUMMARY OF DESIGNABILITY SCORE AND INTERFACE DISTANCES
-#path AB_subA_matches BC_subA_matches CD_subA_matches AB_CAcontact BC_CAcontact CD_CAcontact'''
+#path AB_subA_matches BC_subA_matches CD_subA_matches AB_CAcontact BC_CAcontact CD_CAcontact Average_AD_DIST'''
 print header
 with open( sys.argv[ 1 ] ) as file:
 	for i in file:
@@ -47,8 +49,17 @@ with open( sys.argv[ 1 ] ) as file:
 			cadist.append( round( np.mean( sorted( caD )[:3] ), 1) )
 	
 		# Filter any interfaces with larger a-d-e c-alpha distances of intended cluster geometry e.g. > "6,8,6" Angstroms
-		if cadist[0] > 6 or cadist[1] > 7.7 or cadist[2] > 6: 
+		if cadist[0] > 6 or cadist[1] > 7.5 or cadist[2] > 6 or min( cadist ) < 4: 
 			continue
+
+		# find average closest distance from residues  across CA
+		ha, hd = pdb.select( 'chain A resnum 5 to 30' ), pdb.select( 'chain D resnum 5 to 30' )
 		
-		print i.rstrip(), ' '.join( [ str(x) for x in cadist] )	
+		dMatSC 		= buildDistMatrix( ha, hd )
+		caDsc 		= [ min(d) for d in dMatSC ]
+		superCore 	= round( np.mean( caDsc ), 2 )
+
+
+		
+		print i.rstrip(), ' '.join( [ str(x) for x in cadist] ), superCore
 
