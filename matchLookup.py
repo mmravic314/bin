@@ -10,7 +10,9 @@ from itertools import groupby
 
 ## Example
 # > python ~/bin/matchLookup.py n9_2strand.pdb n9_2strand.pds.m  n9_2strand.pds.struct
-## NEWEST > python ~/bin/matchLookup.py n9_2strand.pdb n9_2strand.pds.m  n9_2strand.pds.struct ~/peptideAmyloid/masterSubDir/
+## path2originalPDB(assumed as path to .pds version as well), path2Matchfile path2StructuresDir path2OriginalPDbs(outputs of createPDS) path2masterDir
+## NEWEST > python ~/bin/matchLookup.py n9_2strand.pdb n9_2strand.pds.m  n9_2strand.pds.struct ~/peptideAmyloid/masterSubDir/ ~/termanal/
+
 
 
 # look through match file, hash residue numbers by pbd name + chain (allow matches to more than 1 pdb)
@@ -52,6 +54,9 @@ def continutityCheck( array ):
 
 pdbIn 		 = parsePDB( sys.argv[1] )
 fragmentDict = queryInterfaceConvert( pdbIn )
+pdsPath 	 = sys.argv[1][:-4] + '.pds'
+
+#check = parsePDB( sys.argv[5] )
 
 #print fragmentDict.items()
 
@@ -249,35 +254,33 @@ with open( sys.argv[2] ) as file:
 		if not os.path.exists( outDir ):
 			os.mkdir( outDir )
 
+		if not os.path.exists( 'tmp' ):
+			os.mkdir( 'tmp' )
 
+		############### obsolete section to align expanded match (+helix) with the original template
 		# Before saving helical segments, find transformation matrix for best RMSD for aligning match and original pdb segment 
 		# Apply to the entire section 
-		match 		= subset.select( 'bb resnum %s' % ( all_match ) ).copy()				# matched regions in original PDB
-		indexMatch 	= str( mNum )
-		if len( indexMatch ) == 1:
-			indexMatch = '00' + indexMatch
-		elif len( indexMatch ) == 2:
-			indexMatch = '0' + indexMatch
+		#match 		= subset.select( 'bb resnum %s' % ( all_match ) ).copy()				# matched regions in original PDB
+		#indexMatch 	= str( mNum )
+		#if len( indexMatch ) == 1:
+		#	indexMatch = '00' + indexMatch
+		#elif len( indexMatch ) == 2:
+		#	indexMatch = '0' + indexMatch
 
-		mPath 		= os.path.join( sys.argv[3], 'match%s.pdb' % indexMatch  ) 		# aligned match
-		alignedM	= parsePDB( mPath , subset = 'bb')
+		#mPath 		= os.path.join( sys.argv[3], 'match%s.pdb' % indexMatch  ) 		# aligned match
+		#alignedM	= parsePDB( mPath , subset = 'bb')
 		
-		print calcRMSD( match, pdbIn.select( 'bb' ) )
-		transMat 	= calcTransformation( match, alignedM )
-		superpose( match, alignedM.copy() )	
-		print calcRMSD( match, pdbIn.select( 'bb' ) )
+		#print calcRMSD( match, pdbIn.select( 'bb' ) )
+		#transMat 	= calcTransformation( match, alignedM )
+		#superpose( match, alignedM.copy() )	
+		#print calcRMSD( match, pdbIn.select( 'bb' ) )
 
-		# try a 180 degree flip to get a better alignment, if this is poor
-		if calcRMSD( match, pdbIn.select( 'bb' ) )	> 1.2:
-			newT = Transformation( np.array( [[ -1,0,0 ],[0,1,0], [0,0,-1]]) , np.array( [0,0,0] ) )
-			#newT.setRotation( np.zeros( 3 ) + [[ -1,0,0 ],[0,-1,0], [0,0,1]] )
-			print newT.getMatrix()
-			match = applyTransformation( newT, match )
-			superpose( match, alignedM )
-			print calcRMSD( match, pdbIn.select( 'bb' ) )	
-			sys.exit()
+		#quitFlag = False
+		# to use master to find a match from the objects ( found match as target and full unit  )
+		#if calcRMSD( match, pdbIn.select( 'bb' ) )	> 1.2:
+		#	quitFlag = True
 		#print transMat
-
+		##################################
 
 ########## Actually save match files, aligned to original query match site
 		index = 0
@@ -289,22 +292,65 @@ with open( sys.argv[2] ) as file:
 			hStr 		= ' '.join( [ str( n ) for n in h ] )
 			extStr 		= ' '.join( [ str( n ) for n in ext ] )
 
+			print hPath
+			
 
-			hsel 		= subset.copy().select( 'resnum %s %s' % ( hStr, all_match  ) )
-			hsel 		= applyTransformation( transMat, hsel )
-			writePDB( hPath, hsel )
-
+			## re-find match,except with helix this time. Save as tmp files. move files into output dir and rename 
 			if hStr != extStr:
 				extsel 		= subset.copy().select( 'resnum %s %s' % ( extStr, all_match  ) )
-				extsel 		= applyTransformation( transMat, extsel )
 				writePDB( extPath, extsel )
+
+				# create target PDS of this match in tmp directory
+				opdsPath 	= 'tmp/matchEXT.pds'
+				cpdsCMD		= [ os.path.join( sys.argv[5], 'createPDS' ), '--type', 'target', '--pdb', extPath, '--pds', opdsPath ]
+				sp.call( cpdsCMD )
+
+				# run master search with this pds and the input pds(query), save top match in 
+				mstrCMD 	= [ os.path.join( sys.argv[5], 'master' ), '--query', pdsPath, '--target', opdsPath, '--topN',
+								'1', '--rmsdCut', '3.2', '--outType', 'full', '--structOut', 'tmp'
+							  ] 
+				outMatchPath = 'tmp/full1.pdb'
+				sp.call( mstrCMD )
+
+				sp.call( [ 'mv', outMatchPath, extPath ] )
+
+
+			else:
+				hsel 		= subset.copy().select( 'resnum %s %s' % ( hStr, all_match  ) )
+				writePDB( hPath, hsel )
+
+				# create target PDS of this match in tmp directory
+				opdsPath 	= 'tmp/match.pds'
+				cpdsCMD		= [ os.path.join( sys.argv[5], 'createPDS' ), '--type', 'target', '--pdb', extPath, '--pds', opdsPath ]
+				sp.call( cpdsCMD )
+
+				# run master search with this pds and the input pds(query), save top match in 
+				mstrCMD 	= [ os.path.join( sys.argv[5], 'master' ), '--query', pdsPath, '--target', opdsPath, '--topN',
+								'1', '--rmsdCut', '3.2', '--outType', 'full', '--structOut', 'tmp'
+							  ] 
+				outMatchPath = 'tmp/full1.pdb'
+				sp.call( mstrCMD )
+
+				sp.call( [ 'mv', outMatchPath, hPath ] )
 				
+			
+
 			index += 1	
 			print
 
 		print
-		
+sp.call( ['rm', '-r', 'tmp'] )
 
 
 
 
+######### 
+'''
+to fix problem of poor rmsd by Prody, try to align match+helix(target) to original(query)
+
+>  ~/termanal/createPDS --type target --pdb searchFrags/n9_2strand_helixMatches/match49_0_3EOJ_ext.pdb
+
+> ~/termanal/master --query searchFrags/n9_2strand.pds --target searchFrags/n9_2strand_helixMatches/match49_0_3EOJ_ext.pds --outType full --rmsdCut 10 --structOut tmp_rematch/ --topN 1
+
+WORKS!!
+'''
