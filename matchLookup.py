@@ -9,6 +9,8 @@ from operator import itemgetter
 from itertools import groupby
 
 ## Example
+# > python ~/bin/matchLookup.py n9_2strand.pdb n9_2strand.pds.m  n9_2strand.pds.struct
+## NEWEST > python ~/bin/matchLookup.py n9_2strand.pdb n9_2strand.pds.m  n9_2strand.pds.struct ~/peptideAmyloid/masterSubDir/
 
 
 # look through match file, hash residue numbers by pbd name + chain (allow matches to more than 1 pdb)
@@ -18,10 +20,9 @@ from itertools import groupby
 interface = [10,12,14,16,18,21,23]
 # convert an input pdb file to index of eligible residues in fragments (e.g. 1:[0,2,4,7,8]; 2:[0,2,4,7,8]  )
 # Which can be converted to selection string of a matched pdb
-def queryInterfaceConvert( pdbPath ):
+def queryInterfaceConvert( pdb ):
+	
 	fragmentDict = {}
-
-	pdb = parsePDB( pdbPath )
 
 	frag 			= 0
 	for c in pdb.iterChains():
@@ -49,8 +50,8 @@ def continutityCheck( array ):
 			ind +=1
 	return True
 
-
-fragmentDict = queryInterfaceConvert( sys.argv[1] )
+pdbIn 		 = parsePDB( sys.argv[1] )
+fragmentDict = queryInterfaceConvert( pdbIn )
 
 #print fragmentDict.items()
 
@@ -70,9 +71,11 @@ with open( sys.argv[2] ) as file:
 			rng = np.arange( int( k[0] ), 1 + int( k[1] )  )
 			all_match.extend( rng )
 
-		all_match = ' '.join( [ str( x ) for x in all_match[:]] )
+		all_match = ' '.join( [ str( x ) for x in sorted( all_match[:] )] )
+		#print i
+		#print all_match
 
-		chID 	= os.path.basename( i.split()[1] ).split('_')[1][0]
+		#chID 	= os.path.basename( i.split()[1] ).split('_')[1][0]
 		# Prepare to store residueList
 		resiInterface 	= []
 		disclude		= []
@@ -100,18 +103,22 @@ with open( sys.argv[2] ) as file:
 		
 		print os.path.basename( i.split()[1] ), i.split()[0], 
 
-		# Download whole pdb if necesasary to self-named directory in working dir
-		pdbPath = os.path.join( queryName, os.path.basename( i.split()[1] ).split('.')[0] + '.pdb' )
+		# Look for 
+		pdbPath = os.path.join( sys.argv[4], os.path.basename( i.split()[1] ).split('.')[0] + '.pdb' )
 		pdbM 	= os.path.basename( i.split()[1] ).split('_')[0].upper()
-		if not os.path.exists( pdbPath ):
+		print pdbPath
 
-			p 		=  os.path.basename( i.split()[1] ).split('_')[0].upper()
-			# download whole pdb, take only specified chain, renumber residues?
-			sp.call( [ 'wget', 'www.rcsb.org/pdb/files/%s.pdb' % (p) , '-P', queryName ])
-			pact 	=  os.path.join( queryName, '%s.pdb' % (p) )
+		#if not os.path.exists( pdbPath ):
+
+		#	p 		=  os.path.basename( i.split()[1] ).split('_')[0].upper()
 			
+			# extract createPDS parsed chain
+		#	pact 	=  os.path.join( sys.argv[4], '%s_.pdb' % (p) )
 
-			writePDB( pdbPath, parsePDB( pact, chain = chID ).select( 'protein' ) )
+			#NAH# download whole pdb, take only specified chain, renumber residues?
+			#sp.call( [ 'wget', 'www.rcsb.org/pdb/files/%s.pdb' % (p) , '-P', queryName ])
+			#pact 	=  os.path.join( queryName, '%s.pdb' % (p) )
+			#writePDB( pdbPath, parsePDB( pact).select( 'protein' ) )
 
 		# look for residues within chain that are within 4 angstroms of side chain atoms
 		# disclude non-interfacial and +/- 2 from ends of fragment
@@ -119,16 +126,13 @@ with open( sys.argv[2] ) as file:
 
 		subset 		= parsePDB( pdbPath )
 
-		#Renumber residues in this single chain protein 
-		r = 1
+		#Renumber residues 
+		r = 0
 		for res in subset.iterResidues():
 			res.setResnum( r )
 			r += 1
 
 		pdbInterface= subset.select( selStr )
-
-		#print resiInterface, selStr
-
 
 		# Search pdb for neighbors by each atom in interface set
 		pdbCont 	= Contacts( subset )
@@ -138,10 +142,12 @@ with open( sys.argv[2] ) as file:
 				if atom.getResnum() not in contacts:
 					
 					contacts.append( atom.getResnum() )
+					chID = subset.select( 'resnum %d' % ( atom.getResnum() )   ).getChids()[0]
 					# try to add +/- 2 for each contacted residue (check helicity later)
 					more = [ atom.getResnum() -2, atom.getResnum() -1, atom.getResnum() +1, atom.getResnum() +2 ]
 					for k in more:
-						if subset[chID, k]:
+
+						if subset[chID, k] and k >= 0:
 							if k not in contacts:
 								contacts.append( k )
 
@@ -154,10 +160,12 @@ with open( sys.argv[2] ) as file:
 		# for residues within 4.2 angstroms of target interface, find continuous helical fragments at least 4 residues
 		helix = []
 		for c in contacts:
+			chID 	= subset.select( 'resnum %d' % (c) ).getChids()[0]
 			resi 	= subset[chID, c]
+			
 			try:
 				phi, psi = calcPhi(resi), calcPsi(resi)
-			except ValueError: ## Skip initial/final residues with missing dihedral
+			except ValueError, TypeError: ## Skip initial/final residues with missing dihedral
 				continue
 			if -130 < phi < -20 and -90 < psi < 30:	
 				helix.append( c )
@@ -171,7 +179,7 @@ with open( sys.argv[2] ) as file:
 		
 		# random pertrbations to helix array.... to check that this break-up is working
 
-		helix = [323,350,351,352,353,354] + helix
+		#helix = [323,350,351,352,353,354] + helix
 		# break into continuous groups of residues, get all the different helical segments >4 long
 		helixGroups = []
 		for k, g in groupby(enumerate(helix), lambda (i,x):i-x):
@@ -182,6 +190,7 @@ with open( sys.argv[2] ) as file:
 		# Quit this match if no valid groups of helical residues
 		if len(helixGroups) < 1:
 			print "no valid helical segments found\n"
+	
 			continue
 
 		# try to entend each helix further if possible.
@@ -193,7 +202,8 @@ with open( sys.argv[2] ) as file:
 			nStr = h[0] - 1
 			while nStr > subset[0].getResnum():
 				# check helical segments for each group
-				resi = subset[ chID, nStr ] 
+				chID 	= subset.select( 'resnum %d' % (nStr) ).getChids()[0]
+				resi 	= subset[chID, nStr] 
 				if resi == None: break
 				try:
 					
@@ -213,7 +223,8 @@ with open( sys.argv[2] ) as file:
 			cStr = h[0] + 1
 			while nStr < subset[-1].getResnum():
 				# check helical segments for each group
-				resi 	= subset[ chID, cStr ]
+				chID 	= subset.select( 'resnum %d' % (cStr) ).getChids()[0]
+				resi 	= subset[chID, cStr] 
 				if resi == None: break
 				try:
 
@@ -239,25 +250,57 @@ with open( sys.argv[2] ) as file:
 			os.mkdir( outDir )
 
 
+		# Before saving helical segments, find transformation matrix for best RMSD for aligning match and original pdb segment 
+		# Apply to the entire section 
+		match 		= subset.select( 'bb resnum %s' % ( all_match ) ).copy()				# matched regions in original PDB
+		indexMatch 	= str( mNum )
+		if len( indexMatch ) == 1:
+			indexMatch = '00' + indexMatch
+		elif len( indexMatch ) == 2:
+			indexMatch = '0' + indexMatch
+
+		mPath 		= os.path.join( sys.argv[3], 'match%s.pdb' % indexMatch  ) 		# aligned match
+		alignedM	= parsePDB( mPath , subset = 'bb')
+		
+		print calcRMSD( match, pdbIn.select( 'bb' ) )
+		transMat 	= calcTransformation( match, alignedM )
+		superpose( match, alignedM.copy() )	
+		print calcRMSD( match, pdbIn.select( 'bb' ) )
+
+		# try a 180 degree flip to get a better alignment, if this is poor
+		if calcRMSD( match, pdbIn.select( 'bb' ) )	> 1.2:
+			newT = Transformation( np.array( [[ -1,0,0 ],[0,1,0], [0,0,-1]]) , np.array( [0,0,0] ) )
+			#newT.setRotation( np.zeros( 3 ) + [[ -1,0,0 ],[0,-1,0], [0,0,1]] )
+			print newT.getMatrix()
+			match = applyTransformation( newT, match )
+			superpose( match, alignedM )
+			print calcRMSD( match, pdbIn.select( 'bb' ) )	
+			sys.exit()
+		#print transMat
+
+
+########## Actually save match files, aligned to original query match site
 		index = 0
 		for h,ext in zip( helixGroups, exthelixGroups ):
+			#transMat 	= calcTransformation( match, pdbIn.select( 'ca' ))	
 
-			hPath 		= os.path.join( outDir,  'match%d_%d_%s.pdb' 		% ( mNum, index, pdbM) )
-			extPath 	= os.path.join( outDir,  'match%d_%d_%s_ext.pdb' 	% ( mNum, index, pdbM) )
+			hPath 		= os.path.join( outDir,  'match%d_%d_%s.pdb' 		% ( mNum, index, pdbM[:-4]) )
+			extPath 	= os.path.join( outDir,  'match%d_%d_%s_ext.pdb' 	% ( mNum, index, pdbM[:-4]) )
 			hStr 		= ' '.join( [ str( n ) for n in h ] )
 			extStr 		= ' '.join( [ str( n ) for n in ext ] )
 
 
-			print hStr
-
-			hsel 		= subset.select( 'resnum %s %s' % ( hStr, all_match  ) )
+			hsel 		= subset.copy().select( 'resnum %s %s' % ( hStr, all_match  ) )
+			hsel 		= applyTransformation( transMat, hsel )
 			writePDB( hPath, hsel )
 
 			if hStr != extStr:
-				extsel 		= subset.select( 'resnum %s %s' % ( extStr, all_match  ) )
-				writePDB( extPath, hsel )
+				extsel 		= subset.copy().select( 'resnum %s %s' % ( extStr, all_match  ) )
+				extsel 		= applyTransformation( transMat, extsel )
+				writePDB( extPath, extsel )
 				
 			index += 1	
+			print
 
 		print
 		
