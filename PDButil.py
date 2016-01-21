@@ -279,4 +279,56 @@ def kmedoid_clustering( matrix, threshold_RMSD, lookupHash):
 	return clust
 
 
+## extend an alpha helix both C-terminally and N terminally, given the 4 pro/pre-ceding residue
+## Uses GCN4 average internal coordinates of a 10 residue ideal helix
+## input prody atom group of object to extend and atom group of ideal GCN4 mimic helix
+## Some of the ends of the helix with non-ideal helical dihedrals should get minimized in rosetta later if necessary
+def ext_aHelixBOTH ( obj, idealH ):
+
+	# N term
+	chainObj 	= obj.getChids()[0]
+	first4		= obj.select( 'calpha' ).getResnums()[:4]
+	selStrTarg 	= 'chain %s resnum %s' % ( chainObj, ' '.join( [str(x) for x in first4] ) )
+	selStrMob	= 'chain A resnum 6 7 8 9'
+	objNtarg 	= obj.select( selStrTarg )
+	idealHmobN	= idealH.select( selStrMob ).copy()
+	transN		= superpose( idealHmobN, objNtarg )[1]
+	# fit chain and resnums to match those 
+	mobileN 	= idealH.select('chain A resnum 2 3 4 5').copy()
+	mobileN.setChids( [ 'X' for x in mobileN.getChids() ] )
+	preResNums	= [ x - 4  for x in first4 ]
+	for r, new in zip(  mobileN.iterResidues(), preResNums ):
+		r.setResnum( new )
+	applyTransformation( transN, mobileN )
+	obj = mobileN + obj
+
+	# C term
+	last4		= obj.select( 'calpha' ).getResnums()[-4:]
+	selStrTarg 	= 'chain %s resnum %s' % ( chainObj, ' '.join( [str(x) for x in last4] ) )
+	selStrMob	= 'chain A resnum 2 3 4 5'
+	objCtarg 	= obj.select( selStrTarg )
+	idealHmobC	= idealH.select( selStrMob ).copy()
+	transC		= superpose( idealHmobC, objCtarg )[1]
+	# fit chain and resnums to match those 
+	mobileC 	= idealH.select('chain A resnum 6 7 8 9').copy()
+	mobileC.setChids( [ 'X' for x in mobileC.getChids() ] )
+	postResNums	= [ x + 4  for x in last4 ]
+	for r, new in zip(  mobileC.iterResidues(), postResNums ):
+		r.setResnum( new )
+	applyTransformation( transC, mobileC )
+	obj = obj + mobileC
+
+
+	return obj
+
+
+
+
+
+
+
+
+
+
+
 
