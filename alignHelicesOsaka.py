@@ -14,6 +14,8 @@ Marco Mravic DeGrado Lab Jan 2016
 
 
 python ~/bin/alignHelicesOsaka.py ~/peptideAmyloid/searchFrags/1helix/ ~/peptideAmyloid/searchFrags/2helix ~/splayBundle/Cluster-004/ ~/bin/TMalign docked1helix.pkl FullInterface.pdb 
+
+
 '''
 
 import sys, os, subprocess as sp, re, cPickle as pic, shutil, numpy as np 
@@ -36,7 +38,7 @@ picDict = pic.load( open( sys.argv[5], 'rb' ) )
 
 # path to ideal 10 residue alpha helix based on GCN4
 idealH = os.path.join( os.path.dirname( sys.argv[0] ), 'idealHelix10ala.pdb' )
-print idealH
+
 
 #######################################
 
@@ -44,6 +46,8 @@ print idealH
 
 ###########   Main   ##################
 
+
+########## first helix ##############
 # work through all helices docked on osaka frag
 for f in sorted( os.listdir( sys.argv[1] ) ):
 	if f[-4:] != '.pdb': continue
@@ -63,6 +67,7 @@ for f in sorted( os.listdir( sys.argv[1] ) ):
 	pathTmp = os.path.join(  sys.argv[1] , 'tmp.pdb' )
 	writePDB( pathTmp,  parsePDB( targetPDB).select( selstr ) )
 	targetPDB = parsePDB( pathTmp, subset = 'bb' )
+
 
 	# Add 4 residues to each end based off ideal helix. Hand editted so adding 4 doesn't go into space away from interface
 	# hardcoded the path to indela 10 residue helix from GCN4 coords Grigoryan et al 2011. see PDButil module
@@ -94,24 +99,35 @@ for f in sorted( os.listdir( sys.argv[1] ) ):
 			catch =  map(itemgetter(1), g)
 			if len( catch ) > len( segs ): segs = catch
 	if len(segs) < 15:
-		print 'skipped', f, segs
+	#	print 'skipped', f, segs
 		os.remove( newPath )
 		continue
 	
-	print "FOUND eligible:", f, segs
-	print "... NOW: aligning cluster of pairs to helix, writing in 2helix/ tree"
-	writePDB( newPath, targetPDB.select( 'resnum %s' % ' '.join( [ str(x) for x in segs]  )  ) )
-	# make sub dir for each each 1helix docking
 	outPath = os.path.join( sys.argv[2], f.split('.')[0][:-8] )
+	#print "FOUND eligible:", f, segs
+	#print "... NOW: aligning cluster of pairs to helix, writing in 2helix/ tree"
+	writePDB( newPath, targetPDB.select( 'resnum %s' % ' '.join( [ str(x) for x in segs]  )  ) )
+
+	# make sub dir for each each 1helix docking
 	if not os.path.exists( outPath ):
 		os.mkdir(outPath)		
 
+	## DEbugging line
+#	if os.path.basename( outPath ) != '80_0_4AF8'
+#		continue
+
+######## First helix END ################
+
+####### Alignment Section ###############
 
 	#inner loop through input cluster pairs, find best alignment to single helix
 	for pdb in sorted( os.listdir(sys.argv[3]) ):
 		
 		mobilePDB 	= os.path.join( sys.argv[3], pdb )
 		outF 		= os.path.join( outPath, pdb[:-4] + 'X.pdb' )
+
+		# This if a debugging check for poorly aligned peptides
+
 
 		# Full command to output a PDB file and shortened file to just read TMalign output text
 		#cmd  	= ['bash', sys.argv[3], '-file1', targPath, '-file2', f.rstrip(), '-outFile', outF,  '-outputPDB', '-printCE']
@@ -121,23 +137,23 @@ for f in sorted( os.listdir( sys.argv[1] ) ):
 		out = sp.Popen( miniCmd  , stdout = sp.PIPE ).communicate()[0]			#  full command
 		#print out
 		# parse output and
-		print os.path.basename( mobilePDB ), 'to', os.path.basename( newPath )
+		#print os.path.basename( mobilePDB ), 'to', os.path.basename( newPath )
 		#### Aligned length=   15, RMSD=   0.58, Seq_ID=n_identical/n_aligned= 0.000  ###
 		match = re.search( r'Aligned\slength=\s+(\d+),\sRMSD=\s+(\d\.\d\d),' , out)
 		if not match:
 			AlignLength, RMSD = 0.0, 0.0
-			print "Null alignment... skip"
-		#	continue
+		#	print "Null alignment... skip"
+			continue
 		else:
 			AlignLength, RMSD = int( match.group(1) ) , float( match.group(2) )
-			print AlignLength, RMSD
+			#print AlignLength, RMSD
 			if RMSD < 1.00 and AlignLength >= 12:
 				outCmd = [sys.argv[4], mobilePDB, newPath, '-o', outF ]
 				# output the superposition
 				sp.Popen( outCmd  , stdout = sp.PIPE ).communicate()[0]	
 
 		#	break
-				print
+			#	print
 	if len( os.listdir( outPath ) ) <= 1:
 		shutil.rmtree( outPath )
 		continue
@@ -153,8 +169,15 @@ for f in sorted( os.listdir( sys.argv[1] ) ):
 	# Load original template/target helix after it was extended
 	extPDB = parsePDB( newPath )
 
+######## END Alignment Section ###############
+
+	######## Filtering Section ###############
+
+
 	# For all the aligned files created, dump all the non-necessary files, reformat file and keep only closely interacting helical pair
 	for pdb in sorted( os.listdir( outPath ) ):
+
+#		if pdb != '1K3Y-009_001-0086_0111_B_0068_0079_AX.pdb_all_atm_lig':  continue   # debugging line
 		
 		potPath = os.path.join( outPath, pdb ) 
 		if pdb[-3:] != 'lig':
@@ -178,15 +201,14 @@ for f in sorted( os.listdir( sys.argv[1] ) ):
 			prvChain 	= a.getChid()
 			a.setChid( chD[ flg ] )
 
-		print "\n", 'checking aligned', pdb, 
+		#print "\n", 'checking aligned', pdb, 
 
 		# If helical pair too far away...just skip and delete alignmetn file
 		if not inPDB.select( 'calpha chain Y and within 10 of chain X' ): 
 			os.remove( potPath )
-			print
+			#print
 			continue
 
-		
 		# tricky heiristic to get only interacting portion of aligned floating helix 
 		subsetStr 	=  list( inPDB.select( 'calpha chain Y and within 10 of chain X' ).getResnums() )
 
@@ -194,18 +216,19 @@ for f in sorted( os.listdir( sys.argv[1] ) ):
 			for k in [ r-2, r-1, r+1, r+2 ]:
 				if k > 0 and k not in subsetStr:
 					subsetStr.append(k)
-		print len( subsetStr ),
+		#print len( subsetStr ),
 
 		if len( subsetStr ) < 15: 
 			os.remove( potPath )
-			print
+			#print
 			continue 
 
 		## pick out only "good" segment of the aligned floating chain.. to validate
 		subset		=   inPDB.select( 'chain Y resnum %s' % ' '.join( [ str(x) for x in subsetStr] ) ).copy() 
 
 		# Now look at floating aligned helix with respect to their alignment on the OSAKA structure
-		# if any backbone atom less than 4.3 A from any Amyloid C-Beta or backbone less more than 16 to the closest C-beta: kill that residue
+		# if any backbone atom less than 4.3 A from any Amyloid C-Beta 
+		# or backbone less more than 16 to the closest C-beta: kill that residue
 		# Of those residues that are valid, find continuous segs on each chain and only save if it's >=12 long
 		matrix 	= buildDistMatrix(  subset, osakaPDB.select( 'name CB' ) )
 		minD 	= [ min( x ) for x in matrix ]
@@ -220,7 +243,7 @@ for f in sorted( os.listdir( sys.argv[1] ) ):
 		H1good 	= [ x for x in subset.select('calpha').getResnums() if x not in H1bad ]
 		# find longest continuous segment, for the set of valid residues
 		if len( H1good ) < 15:
-			print "Segments found not too small, or nothing found!!!" 
+			#print "Segments found not too small, or nothing found!!!" 
 			os.remove( potPath )
 			continue
 			
@@ -229,15 +252,33 @@ for f in sorted( os.listdir( sys.argv[1] ) ):
 			catch =  map(itemgetter(1), g)
 			if len( catch ) > len( segs ): segs = catch
 
-		print segs
+		#print segs
 		if len( segs ) < 15:				## Skip and delete alignment file if non-valid segment found
 			os.remove( potPath )
 			continue
-		print "FOUND", pdb
-		# If good floating helix found,
+		
+		# If good floating helix found, then double check to remove any non-interacting 'tail' on the target helix
+		finalSeg	= subset.select( 'resnum %s' % ( ' '.join( [ str(x) for x in segs ] ) ) ).copy() 
+		
+		subsetStr 	= list( extPDB.select( 'chain X and within 11 of mobile',  mobile = finalSeg ).select('calpha').getResnums() )
+		for r in subsetStr[:]:
+				for k in [ r-2, r-1, r+1, r+2 ]:
+					if k > 0 and k not in subsetStr:
+						subsetStr.append(k)
+
+		subsetStr = sorted( subsetStr)
+
+		extPDB = extPDB.select( 'chain X resnum %s' % ' '.join( [ str(x) for x in subsetStr] )   ).copy()
+
+		if len( subsetStr ) < 15: 
+				os.remove( potPath )
+				#print
+				continue 
+
+		print "FOUND", pdb.split('.')[0], 'in', os.path.basename( outPath ), 'X', len(subsetStr), 'Y', len(segs)
+
 		## Join the "good" segment of the aligned floating chain and the original target helix
 		
-		finalSeg	= subset.select( 'resnum %s' % ( ' '.join( [ str(x) for x in segs ] ) ) ).copy() 
 		outPDB 		= extPDB + finalSeg + osakaPDB
 		newOutPath 	= os.path.join( outPath, pdb.split('.')[0] + '-screened.pdb' )  
 		os.remove( potPath )
@@ -245,7 +286,7 @@ for f in sorted( os.listdir( sys.argv[1] ) ):
 		# Make sure to save the residue numbers of the calpha chains to keep fixed during minimization
 		# Chain X: those from original search match; Chain Y: 4 closest CA's to Chain X
 		Xconst		= ' '.join( [ str( x ) for x in list( extPDB.select('calpha').getResnums() ) if x in [int( j[0]) for j in helix] ] )
-		print list( extPDB.select('calpha').getResnums() ), [j[0] for j in helix]
+
 
 		xyMatrix 	= buildDistMatrix( finalSeg.select('calpha')  ,extPDB.select('calpha') )
 		store		= []
@@ -254,12 +295,12 @@ for f in sorted( os.listdir( sys.argv[1] ) ):
 		Yconst = ' '.join( sorted( [ str( finalSeg.select('calpha').copy()[ i[1] ].getResnum() ) for i in sorted( store )[:4] ] ) )
 
 		title = 'ChX %s ChY %s' % ( Xconst, Yconst )
-		print "WROTE:   ", title, newOutPath
+		print "WROTE:   ", title#, newOutPath
 		outPDB.setTitle( title )
 		writePDB( newOutPath, outPDB )
 		print
-	
 
+	
 os.remove( pathTmp )
 
 '''
