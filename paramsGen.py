@@ -64,7 +64,7 @@ for b in dB:
    			params.append( pSet )
 print 
 print 'total param sets:', len( params )
-txt = '# dBeta Theta N_t Z_n Z_c W_n\n' + ' '.join( [ x + '/n' for x in params ] )
+txt = '# dBeta Theta N_t Z_n Z_c W_n\n' + ' '.join( [ x + '\n' for x in params ] )
 outFile = open( sys.argv[1], 'w' )
 outFile.write( txt )
 

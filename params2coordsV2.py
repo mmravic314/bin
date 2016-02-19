@@ -14,12 +14,9 @@ import sys, os, numpy as np
 
 
 #### GLOBAL PARAMETERS
-#hLen 	= 25.71			# length of helix, based on 18 residue "idealized" alpha helix 
-hLen 	= 25.8			# length of helix, based on 18 residue fragment of GCN4 (7-24)
+hLen 	= 25.8			# length of helix, based on 18 residue "idealized" alpha helix 
 R_1		= 2.26		
-# Degrees around the omega (W_n) axis between the first CA and the last CA (e.g. -120 from -pi to pi, or 240) 
-#rot 	= 102.8 		# Ideal alpha helix (poly ala GCN4 internal coords/angles/distances averaged & minimized)
-rot		= 119.4			# GCN4
+rot		= 120			# Degrees around the omega (W_n) axis between the first CA and the last CA (-120, from -pi to pi, or 240) 
 
 #### GLOBAL PARAMS END
 
@@ -178,21 +175,12 @@ with open( sys.argv[1] ) as file:
 		# Align GCN4 helix, given N- and C-terminal CA's and helical Axes
 		target 		= helix.alignMarks
 		marks, transMat 	= superpose( alignMobile, target )
-		print 'RMSD to alignment marks (n=4)', round( calcRMSD(target, alignMobile), 5 )
+		#print 'RMSD', calcRMSD(target, alignMobile)
 
 		model 	= applyTransformation( transMat, inPDB.select( 'chain A' ).copy() )
 		model.setChids( [ 'Y' for x in model.iterAtoms() ] )
-		model.setTitle( ' '.join(  i.split() ) )
-
-		# Make the previous repeat and next repeat
-		modelPrv= model.copy()
-		modelNxt= model.copy()
-		modelPrv.setChids( [ 'X' for x in model.iterAtoms() ] )
-		modelNxt.setChids( [ 'Z' for x in model.iterAtoms() ] )
-		modelPrv.setCoords( np.array( [ np.array( [ x[0], x[1] - 10, x[2] ] ) for x in model.getCoords() ] ) )
-		modelNxt.setCoords( np.array( [ np.array( [ x[0], x[1] + 10, x[2] ] ) for x in model.getCoords() ] ) )
-
-		model = modelPrv + model + modelNxt + osaka.copy() 
+		model.setTitle( ' '.join( [str(x) for x in params] ) )
+		model = model + osaka.copy() 
 
 
 		##### Unhash this section to include the alignment marks in the PDB files

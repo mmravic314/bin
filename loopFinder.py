@@ -9,8 +9,6 @@ inPDB = parsePDB( sys.argv[1], subset = 'bb' )
 
 # python ~/bin/loopFinder.py 56_helices.pdb 56_helices.m ~/termanal/support.default/151218_masterDB_parsedPDB/ ~/tertBuilding/CMP_bobo/56_helices/
 
-
-
 # look into file
 lineNum = 0
 with open( sys.argv[2] ) as file:
