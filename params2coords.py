@@ -2,7 +2,8 @@
 
 # example command line
 # python ~/bin/params2coords.py params.txt ~/peptideAmyloid/parameterization/helix_prep/18_2ztaCEN.pdb ~/peptideAmyloid/OsakaModels/ ~/peptideAmyloid/parameterization/FullInterfaceCENTERED.pdb
-
+# or
+# python ~/bin/params2coords.py params_OG.txt ~/peptideAmyloid/parameterization/helix_prep/18_2ztaCEN.pdb ~/peptideAmyloid/OsakaModels/ ~/peptideAmyloid/parameterization/FullInterfaceCENTERED.pdb
 
 # From a set of parameters for the placement of a helix relative to (0,0,0) on a flat amyloid surface 
 
@@ -153,7 +154,7 @@ with open( sys.argv[1] ) as file:
 		if i[0] == '#' or len( i.split() ) != 6: continue
 		params 	= [] 
 		
-		path 	= os.path.join( sys.argv[3], 'model_%d.pdb' % index )
+		path 	= os.path.join( sys.argv[3], 'model_%d.pdb.gz' % index )
 		alignMobile	= inPDB.select( 'ca resnum 7 24' ).copy()
 		cnt = 0
 		for x in i.split():
