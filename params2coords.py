@@ -14,6 +14,11 @@ from prody import *
 import sys, os, numpy as np
 
 
+##
+#Shady  parameter break up for parallelization
+# 349160 done so far
+##
+
 #### GLOBAL PARAMETERS
 #hLen 	= 25.71			# length of helix, based on 18 residue "idealized" alpha helix 
 hLen 	= 25.8			# length of helix, based on 18 residue fragment of GCN4 (7-24)
@@ -151,7 +156,14 @@ index 		= 0
 osaka 		= parsePDB( sys.argv[4] )
 with open( sys.argv[1] ) as file:
 	for i in file:
-		if i[0] == '#' or len( i.split() ) != 6: continue
+		if i[0] == '#':
+			if i[1].isdigit(): 
+				index = int( i[1:].split()[0] )
+				continue
+		print index
+		#sys.exit()
+		#if len( i.split() ) != 6: continue
+		
 		params 	= [] 
 		
 		path 	= os.path.join( sys.argv[3], 'model_%d.pdb.gz' % index )
