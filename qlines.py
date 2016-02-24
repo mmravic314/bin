@@ -12,8 +12,9 @@
 import sys, os, math
 from PDButil import UnNatAA
 
+# Score, length, and discontinuous fragment number  ->  term score.... normalized by the smallest term size expected ~ 10 
 def score( f, l, m):
-	return (2**f)*l*m/48
+	return (2**f)*l*m / ( min( 10 , l ) * 4  )
 
 
 # find number of separate fragments found
