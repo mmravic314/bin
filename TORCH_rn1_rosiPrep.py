@@ -55,19 +55,19 @@ with open( sys.argv[1] ) as file:
 		print 'wrote', newPath, '\n'
 
 		# write resfile just once, since all are the same
-		txt = 'start\n'
-		for k,v in chResi.items():
+txt = 'start\n'
+for k,v in chResi.items():
 			if k in ['X', 'Y', 'Z']:
 				for r in v:
 					txt += '%d %s ALLAAxc\n' % ( r, k )
 			else:
 				for r, c in zip( v, IntF ):
 					if c: txt += '%d %s NATAA\n' % ( r, k )
-					else: txt += '%d %s NATRO\n' % ( r, k )
+					else: txt += '%d %s PIKAA G\n' % ( r, k )
 		
-		resF = open(  'resfile' , 'w' )
-		resF.write( txt )
-		resF.close()
+resF = open(  'resfile' , 'w' )
+resF.write( txt )
+resF.close()
 
-		sys.exit()
+#		sys.exit()
 
