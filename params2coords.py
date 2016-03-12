@@ -3,7 +3,7 @@
 # example command line
 # python ~/bin/params2coords.py params.txt ~/peptideAmyloid/parameterization/helix_prep/18_2ztaCEN.pdb ~/peptideAmyloid/OsakaModels/ ~/peptideAmyloid/parameterization/FullInterfaceCENTERED.pdb
 # or
-# python ~/bin/params2coords.py params_OG.txt ~/peptideAmyloid/parameterization/helix_prep/18_2ztaCEN.pdb ~/peptideAmyloid/OsakaModels/ ~/peptideAmyloid/parameterization/FullInterfaceCENTERED.pdb
+# python ~/bin/params2coords.py ~/peptideAmyloid/parameterization/params_OG.txt ~/peptideAmyloid/parameterization/helix_prep/18_Ideal_allALA.pdb ~/peptideAmyloid/OsakaModels/ ~/peptideAmyloid/parameterization/FullInterfaceCENTERED.pdb
 
 # From a set of parameters for the placement of a helix relative to (0,0,0) on a flat amyloid surface 
 
@@ -20,12 +20,13 @@ import sys, os, numpy as np
 ##
 
 #### GLOBAL PARAMETERS
-#hLen 	= 25.71			# length of helix, based on 18 residue "idealized" alpha helix 
-hLen 	= 25.8			# length of helix, based on 18 residue fragment of GCN4 (7-24)
+hLen 	= 25.71			# length of helix, based on 18 residue "idealized" alpha helix 
+#hLen 	= 25.8			# length of helix, based on 18 residue fragment of GCN4 (7-24)
 R_1		= 2.26		
 # Degrees around the omega (W_n) axis between the first CA and the last CA (e.g. -120 from -pi to pi, or 240) 
-#rot 	= 102.8 		# Ideal alpha helix (poly ala GCN4 internal coords/angles/distances averaged & minimized)
-rot		= 119.4			# GCN4
+rot 	= 102.8 		# Ideal alpha helix (poly ala GCN4 internal coords/angles/distances averaged & minimized)
+#rot		= 119.4			# GCN4
+offset	= np.array( [ 0.23, 9.86, 0.28 ] )
 
 #### GLOBAL PARAMS END
 
@@ -157,10 +158,10 @@ osaka 		= parsePDB( sys.argv[4] )
 with open( sys.argv[1] ) as file:
 	for i in file:
 		if i[0] == '#':
-			if i[1].isdigit(): 
-				index = int( i[1:].split()[0] )
+#			if i[1].isdigit(): 
+#				index = int( i[1:].split()[0] )
 				continue
-		print index
+		print index,
 		#sys.exit()
 		#if len( i.split() ) != 6: continue
 		
@@ -202,8 +203,8 @@ with open( sys.argv[1] ) as file:
 		modelNxt= model.copy()
 		modelPrv.setChids( [ 'X' for x in model.iterAtoms() ] )
 		modelNxt.setChids( [ 'Z' for x in model.iterAtoms() ] )
-		modelPrv.setCoords( np.array( [ np.array( [ x[0], x[1] - 10, x[2] ] ) for x in model.getCoords() ] ) )
-		modelNxt.setCoords( np.array( [ np.array( [ x[0], x[1] + 10, x[2] ] ) for x in model.getCoords() ] ) )
+		modelPrv.setCoords( np.array( [ x - offset for x in model.getCoords() ] ) )
+		modelNxt.setCoords( np.array( [ x + offset for x in model.getCoords() ] ) )
 
 		model = modelPrv + model + modelNxt + osaka.copy() 
 
