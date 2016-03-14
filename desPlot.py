@@ -43,9 +43,9 @@ for num, dat in sorted( sDict.items(), key=lambda n: (  n[1][0][1], n[1][0][0], 
 
 ## rnd1 design filter
 
-	if numR > 7 and score > 2300 and duds == 0: 
+	if numR > 5 and score > 3000 and duds == 0: 
 
-		print num, score, numR, duds
+		print num, score, numR, duds, ' '.join( [ str( r ) for r in dat[1] ] )
 		d +=1
 
 	scores.append( score )

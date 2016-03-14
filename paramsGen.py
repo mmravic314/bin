@@ -35,7 +35,7 @@ def shuffle( lst ):
 
 dB 		= np.arange( -4.93, 5, 4.93/5  )
 W_n		= np.arange(  0, 360, 30 ) 
-Theta = np.append( np.arange( 60, 130, 15 ), np.arange( 240, 330, 15 ) )
+Theta = np.append( np.arange( 50, 140, 15 ), np.arange( -130, -50, 10 ) )
 Z_n		= np.arange(  3,  7,  1 )
 Z_c		= np.arange(  3,  9,  1 )
 # must calc N_t range from previous ranges
@@ -50,6 +50,10 @@ step = 50000
 for b in dB:
   for w in W_n:
     for t in Theta:
+
+      if t > 0: continue
+
+
       for zn in Z_n:
         for zc in Z_c:
    		   # calc dependent param Phi from Z values of axis points
@@ -65,6 +69,9 @@ for b in dB:
           N_t = np.arange( -0.5*( gap * np.sin( t_x ) * np.cos(phi) ), 1 + 0.5 * (gap * np.sin( t_x ) * np.cos(phi) ), inc)
           print N_t, t
 
+          sys.exit()
+
+
           for n in N_t:
 
             pSet = ' '.join( [str(  round( x, 2 ) ) for x in [ b, t, n, zn, zc, w ] ] )
@@ -74,7 +81,7 @@ for b in dB:
 i = len( params )
 print 'total param sets:', len( params )
 
-
+sys.exit()
 index = 0
 step  = 50000
 txt   = '#%d dBeta Theta N_t Z_n Z_c W_n\n' % (index/step)     # + ' '.join( [ x + '\n' for x in params ] 
