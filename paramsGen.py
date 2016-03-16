@@ -4,7 +4,7 @@
 import os, sys, numpy as np, random
 
 ## Global defs
-hLen 	= 25.8	    # length of helix, based on 18 residue "idealized" alpha helix aka GCN4 
+hLen 	= 25.71	    # length of helix, based on 18 residue "idealized" alpha helix  
 tLen	= 33		# longest distance in y direction	
 ##
 
@@ -15,10 +15,6 @@ def ang2rad( ang ):
 
 def rnd( np_vector ):
 	return [ round( x, 3 ) for x in np_vector ]
-
-def shuffle( lst ):
-  return
-
 
 
 ## 
@@ -34,10 +30,10 @@ def shuffle( lst ):
 # Here the completely independents are spaced into vectors... modify to make grid search sparser or denser
 
 dB 		= np.arange( -4.93, 5, 4.93/5  )
-W_n		= np.arange(  0, 360, 30 ) 
+W_n		= np.arange(  15, 360, 20 ) 
 Theta = np.append( np.arange( 50, 140, 15 ), np.arange( -130, -50, 10 ) )
-Z_n		= np.arange(  3,  7,  1 )
-Z_c		= np.arange(  3,  9,  1 )
+Z_n		= np.arange(  3,  8,  1 )
+Z_c		= np.arange(  3,  8,  1 )
 # must calc N_t range from previous ranges
 
 params  = []		# array to fill out, with arrays of these parameters
@@ -47,30 +43,25 @@ params  = []		# array to fill out, with arrays of these parameters
 ## split it up... by var 'step'
 step = 50000
 
+mN = 10
+mxN= 10
+
 for b in dB:
   for w in W_n:
     for t in Theta:
-
-      if t > 0: continue
-
-
       for zn in Z_n:
         for zc in Z_c:
    		   # calc dependent param Phi from Z values of axis points
           phi = np.arcsin( ( zn - zc ) / hLen )	
-          if t > 180:
-            t_x = ang2rad( t-180 )
-          else:
-            t_x = ang2rad( t )
-          gap = tLen - hLen
 
-          inc = 1
+          t_x = ang2rad( np.abs( t ) )
+
+          ext = 0.5 *  ( tLen - hLen * np.sin( t_x ) * np.cos(phi) ) 
+
+          inc = 6.84/7  # max N_t value for accessed PHI and THETA range
+
    		# calculate range of Nt given remaining params... make sure to convert Theta to radians for this
-          N_t = np.arange( -0.5*( gap * np.sin( t_x ) * np.cos(phi) ), 1 + 0.5 * (gap * np.sin( t_x ) * np.cos(phi) ), inc)
-          print N_t, t
-
-          sys.exit()
-
+          N_t =  np.array( [ x for x in np.arange( -1 * 6.84,  6.84 + inc, inc )  if np.abs( x ) <= ext ] )
 
           for n in N_t:
 
@@ -81,7 +72,7 @@ for b in dB:
 i = len( params )
 print 'total param sets:', len( params )
 
-sys.exit()
+
 index = 0
 step  = 50000
 txt   = '#%d dBeta Theta N_t Z_n Z_c W_n\n' % (index/step)     # + ' '.join( [ x + '\n' for x in params ] 

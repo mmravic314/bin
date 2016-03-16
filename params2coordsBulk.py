@@ -1,22 +1,23 @@
-## Marco Mravci Feb 2016 DeGrado Lab
 
-# inputs required ( in order of arguments to script )
-# input 1: a 5 character string of parameter values 
-# input 2: 'ideal helix' all-ala backbone pdb to use as torch template. global variable defaults (length, pitch) for 18_Ideal_allALA.pdb
-# input 3: path to save file to. usually ~/peptideAmyloid/OsakaModels/model_2319.pdb
-# input 4: path to centered fibril PDb file
-
-# outputs: model at path given in sys.argv[3], input 3
 
 # example command line
-## python ~/bin/params2coords.py '0 90 0 5 5 180' ~/peptideAmyloid/parameterization/helix_prep/18_Ideal_allALA.pdb ~/peptideAmyloid/OsakaModels/model_0.pdb ~/peptideAmyloid/parameterization/FullInterfaceCENTERED.pdb
+# python ~/bin/params2coords.py params.txt ~/peptideAmyloid/parameterization/helix_prep/18_2ztaCEN.pdb ~/peptideAmyloid/OsakaModels/ ~/peptideAmyloid/parameterization/FullInterfaceCENTERED.pdb
+# or
+# python ~/bin/params2coords.py ~/peptideAmyloid/parameterization/params_OG.txt ~/peptideAmyloid/parameterization/helix_prep/18_Ideal_allALA.pdb ~/peptideAmyloid/OsakaModels/ ~/peptideAmyloid/parameterization/FullInterfaceCENTERED.pdb
 
 # From a set of parameters for the placement of a helix relative to (0,0,0) on a flat amyloid surface 
+
+# input file to read parameters from
 #dBeta Theta N_t Z_n Z_c W_n; indexed by python array 0,1,2,3,4,5 ... and Phi added as 6th
 
 from prody import *
 import sys, os, numpy as np
 
+
+##
+#Shady  parameter break up for parallelization
+# 349160 done so far
+##
 
 #### GLOBAL PARAMETERS
 hLen 	= 25.71			# length of helix, based on 18 residue "idealized" alpha helix 
@@ -25,7 +26,6 @@ R_1		= 2.26
 # Degrees around the omega (W_n) axis between the first CA and the last CA (e.g. -120 from -pi to pi, or 240) 
 rot 	= 102.8 		# Ideal alpha helix (poly ala GCN4 internal coords/angles/distances averaged & minimized)
 #rot		= 119.4			# GCN4
-## Vector to translate each torch helix for wall-paper symmetry, given average vector linking "identical" atoms between fibril repeat unit (2 strands)
 offset	= np.array( [ 0.23, 9.86, 0.28 ] )
 
 #### GLOBAL PARAMS END
@@ -39,6 +39,27 @@ def rnd( np_vector ):
 	return [ round( x, 3 ) for x in np_vector ]
 
 
+# Write a pdb formatted line
+def pdb_line( coords, serial, resnum, chain):
+		##  '{:<6}{:>5} {:<4}{:<1}{:<3} {:<1}{:>4}{:<1} {:>8}{:>8}{:>8}{:>6}{:>6} {:>2}{:>2}\n'.format( *lineList )
+	lineList = [
+		'ATOM',				#1	"ATOM " or "HETATM"	6	%-6s	01-06	[0:6]
+		serial, 			#2	atom serial number	5	%5d	07-11	[6:11]
+		'CA', 				#3	atom name	4	%4s	13-16	[12:16]
+		'', 				#4	alternate location indicator	1	%1s	17	[16:17]
+		'HIS', 				#5	residue name	3	%3s	18-20	[17:20]
+		chain, 				#6	chain identifier	1	%1s	22	[21:22]
+		resnum, 			#7	residue sequence number	4	%4d	23-26	[22:26]
+		'', 				#8	code for insertion of residues	1	%1s	27	[26:27]
+		str( coords[0] ),	#9	orthogonal coordinates for X (in Angstroms)	8	%8.3f	31-38	[30:38]
+		str( coords[1] ),	#10	orthogonal coordinates for Y (in Angstroms)	8	%8.3f	39-46	[38:46]
+		str( coords[2] ),	#11	orthogonal coordinates for Z (in Angstroms)	8	%8.3f	47-54	[46:54]
+		'1.00', 			#12	occupancy	6	%6.3f	55-60	[54:60]
+		'30.00', 			#13	temperature factor	6	%6.3f	61-66	[60:66]
+		'C', 				#14	element symbol	2	%2s	77-78	[76:78]
+		'' 					#15	charge on the atom	2	%2s	79-80	[78:80]
+	]
+	return '{:<6}{:>5} {:<4}{:<1}{:<3} {:<1}{:>4}{:<1}   {:>8}{:>8}{:>8}{:>6}{:>6}          {:>2}{:>2}\n'.format( *lineList )
 
 class Helix:
 	
@@ -120,26 +141,35 @@ class Helix:
 
 #################### MAIN ###########################################
 
+
+# Make folder to store models
+if not os.path.exists( sys.argv[3] ):
+	os.mkdir( sys.argv[3] )
+
+
 # for each line in param.txt input, calc array and make helix (calculate coordinates for end points)
 params 		= []
 inPDB 		= parsePDB( sys.argv[2] ) 
-# the order of selected atoms from PDB file matches those in helix object: Helix.alignMarks
+	# the order of selected atoms from PDB file matches those in helix object: Helix.alignMarks
 
 
-
+index 		= 0
 osaka 		= parsePDB( sys.argv[4] )
-i 			= sys.argv[1]					# parameter string, given at input 
-
-
-if len( i.split() ) != 6:
-				print 'Error in params string input, incorrect number of parameters, 6 needed: dBeta Theta N_t Z_n Z_c W_n'
-				sys.exit()
-else:
-
+with open( sys.argv[1] ) as file:
+	for i in file:
+		if i[0] == '#':
+#			if i[1].isdigit(): 
+#				index = int( i[1:].split()[0] )
+				continue
+		print index,
+		#sys.exit()
+		#if len( i.split() ) != 6: continue
+		
 		params 	= [] 
 		
 #		path 	= os.path.join( sys.argv[3], 'model_%d.pdb.gz' % index )
-		path 	= sys.argv[3]	# debugging option
+#
+		path 	= os.path.join( sys.argv[3], 'model_%d.pdb' % index )	# debugging option
 
 		alignMobile	= inPDB.select( 'ca resnum 7 24' ).copy()
 		cnt = 0
@@ -153,7 +183,7 @@ else:
 		phi = np.arcsin( ( params[3] - params[4] ) / hLen )
 		params.append( phi )    								# Add Phi parameter, Z_n to Z_c angle
 		print '\n'
-		print 'model', os.path.basename( sys.argv[3] ), 'params', params
+		print 'model', index, 'params', params
 
 		
 		# derive coordinates for axis, given input parameters
@@ -162,13 +192,14 @@ else:
 		## unhash this line to print out sanity check for coordinates and axis points
 		####helix.test_W() 
 
-		# Align ideal helix, given N- and C-terminal CA's and helical Axes
+		# Align GCN4 helix, given N- and C-terminal CA's and helical Axes
 		target 		= helix.alignMarks
 		marks, transMat 	= superpose( alignMobile, target )
-		#print 'RMSD to alignment marks (n=4)', round( calcRMSD(target, alignMobile), 5 )
+		print 'RMSD to alignment marks (n=4)', round( calcRMSD(target, alignMobile), 5 )
 
 		model 	= applyTransformation( transMat, inPDB.select( 'chain A' ).copy() )
 		model.setChids( [ 'Y' for x in model.iterAtoms() ] )
+		model.setTitle( ' '.join(  i.split() ) )
 
 		# Make the previous repeat and next repeat
 		modelPrv= model.copy()
@@ -179,7 +210,7 @@ else:
 		modelNxt.setCoords( np.array( [ x + offset for x in model.getCoords() ] ) )
 
 		model = modelPrv + model + modelNxt + osaka.copy() 
-		model.setTitle( ' '.join(  i.split() ) )
+
 
 		##### Unhash this section to include the alignment marks in the PDB files
 		#tar = AtomGroup('target Marks')
@@ -194,5 +225,6 @@ else:
 		# write pdb for this parameter set
 		writePDB( path, model )
 
+		index += 1
 
 #################### MAIN END #######################################
