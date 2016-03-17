@@ -25,9 +25,17 @@ if fragsDir[-1] == '/':
 scorePath 	= os.path.join( sys.argv[2], fragsDir.split('/')[-1][4:] + '.sc' )
 
 ## Abort if fragment directory doesnt exist, aka previous frag creation step was aborted
+if not os.path.exists( fragsDir ):
+	print "Frag creation failed in previous step... Aborting"
+	txt = 'HH SH1 SH2 SH3\n0 0 0 0 0'
+	oFile = open(scorePath, 'w')
+	oFile.write( txt  )
 
-if not os.path.exists( fragsDir ) or os.path.exists( scorePath ):
-	print "Aborting (score file exists OR frag creation failed)"
+	sys.exit()
+
+
+if not os.path.exists( scorePath ):
+	print "Aborting (score file exists)"
 	sys.exit()
 
 ##
