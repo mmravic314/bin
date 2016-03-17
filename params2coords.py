@@ -9,7 +9,7 @@
 # outputs: model at path given in sys.argv[3], input 3
 
 # example command line
-## python ~/bin/params2coords.py '0 90 0 5 5 180' ~/peptideAmyloid/parameterization/helix_prep/18_Ideal_allALA.pdb ~/peptideAmyloid/OsakaModels/model_0.pdb ~/peptideAmyloid/parameterization/FullInterfaceCENTERED.pdb
+## python ~/bin/params2coords.py 0 90 0 5 5 180 ~/peptideAmyloid/parameterization/helix_prep/18_Ideal_allALA.pdb ~/peptideAmyloid/OsakaModels/model_0.pdb ~/peptideAmyloid/parameterization/FullInterfaceCENTERED.pdb
 
 # From a set of parameters for the placement of a helix relative to (0,0,0) on a flat amyloid surface 
 #dBeta Theta N_t Z_n Z_c W_n; indexed by python array 0,1,2,3,4,5 ... and Phi added as 6th
@@ -120,18 +120,20 @@ class Helix:
 
 #################### MAIN ###########################################
 
+
+
+osaka 		= parsePDB( sys.argv[9] )
+i 			= ' '.join( sys.argv[1:7] )				# first 6 arguements is the parameter string, given at input 
+
 # for each line in param.txt input, calc array and make helix (calculate coordinates for end points)
-params 		= []
-inPDB 		= parsePDB( sys.argv[2] ) 
+inPDB 		= parsePDB( sys.argv[7] ) 
 # the order of selected atoms from PDB file matches those in helix object: Helix.alignMarks
 
 
 
-osaka 		= parsePDB( sys.argv[4] )
-i 			= sys.argv[1]					# parameter string, given at input 
-
 
 if len( i.split() ) != 6:
+				print "params", i
 				print 'Error in params string input, incorrect number of parameters, 6 needed: dBeta Theta N_t Z_n Z_c W_n'
 				sys.exit()
 else:
@@ -139,7 +141,7 @@ else:
 		params 	= [] 
 		
 #		path 	= os.path.join( sys.argv[3], 'model_%d.pdb.gz' % index )
-		path 	= sys.argv[3]	# debugging option
+		path 	= sys.argv[8]	# debugging option
 
 		alignMobile	= inPDB.select( 'ca resnum 7 24' ).copy()
 		cnt = 0
