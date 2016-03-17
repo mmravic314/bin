@@ -10,7 +10,7 @@
 #$ -o /netapp/home/mmravic/peptideAmyloid/logfiles/
 
 ### Know task from number of length of list file or number of pdb's in directory... hardcode in
-#$ -t 4
+#$ -t 1-50000
 
 # For each task, read the input file and stop on the line defined by the SGE task ID (on cluster)
 # if parameter file has a skip number (e.g. params2.txt starts with 1#), then all model id's should increase by ( skip number * 50000 ) via parameter subset size, from paramsGen.py
@@ -22,6 +22,10 @@
 #
 ####
 
+## actual
+# ~/bin/torch_evalQsub.sh ~/peptideAmyloid/parameterization/params_OG.txt ~/peptideAmyloid/OsakaModels/ ~/peptideAmyloid/scores_rnd1/ ~/peptideAmyloid/parameterization/helix_prep/18_Ideal_allALA.pdb ~/peptideAmyloid/parameterization/FullInterfaceCENTERED.pdb ~/binLocal/termanal/support.default/162901_bc_30-scPDB/list.txt ~/binLocal/termanal/ 
+#
+##
 
 ## 
 # global params for i/o
@@ -70,14 +74,14 @@ start=$inx
 # 
 
 # tasks start at 1, so {1,2,...50000}, {50001,...100000}
-#taskID=$SGE_TASK_ID 			#CLUSTER
-taskID=2						# LOCAL 
+taskID=$SGE_TASK_ID 			#CLUSTER
+#taskID=1						# LOCAL 
 stop=$(( $start + $taskID - 1 ))
 
 basename="model_$stop.pdb"
+base2="tmp_model_$stop"
 modelPath="$modelDir$basename"
-fragDir="$modelDir"tmp_"${basename::-4}"/
-
+fragDir="$modelDir$base2"/
 
 
 
@@ -102,17 +106,20 @@ done < $1
 
 
 
-echo params "$params"
+echo params $params 
 
 #### make model
 echo
 echo Making $modelPath
 ## local
-python ~/bin/params2coords.py "$params" $helixF $modelPath $fibrilF
+#python ~/bin/params2coords.py "$params" $helixF $modelPath $fibrilF
 
 
 ## Cluster
-#scl enable python27 'python ~/bin/params2coords.py \"$params\" $helixF $modelPath $fibrilF'
+
+
+scl enable python27 "python ~/bin/params2coords.py $params $helixF $modelPath $fibrilF"
+
 
 ####
 
@@ -122,11 +129,11 @@ echo
 ##### try to generate fragments
 
 ## local
-python ~/bin/torch_desginibility.py $modelPath $fragDir $scoresDir
+#python ~/bin/torch_desginibility.py $modelPath $fragDir $scoresDir
 
 
 ## Cluster
-#scl enable python27 'python ~/bin/torch_desginibility.py $modelPath $fragDir $scoresDir'
+scl enable python27 "python ~/bin/torch_desginibility.py $modelPath $fragDir $scoresDir"
 
 #####
 echo
@@ -136,10 +143,10 @@ echo
 
 
 ## local
-python ~/bin/torch_master.py $fragDir $scoresDir $termDir $dbListF
+#python ~/bin/torch_master.py $fragDir $scoresDir $termDir $dbListF
 
 ## Cluster
-#scl enable python27 'python ~/bin/torch_master.py $fragDir $scoresDir $termDir $dbListF'
+scl enable python27 "python ~/bin/torch_master.py $fragDir $scoresDir $termDir $dbListF"
 
 
 ######
