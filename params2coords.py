@@ -152,7 +152,7 @@ else:
 
 		phi = np.arcsin( ( params[3] - params[4] ) / hLen )
 		params.append( phi )    								# Add Phi parameter, Z_n to Z_c angle
-		print '\n'
+	#	print '\n'
 		print 'model', os.path.basename( sys.argv[3] ), 'params', params
 
 		

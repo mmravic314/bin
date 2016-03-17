@@ -24,6 +24,16 @@ if fragsDir[-1] == '/':
 
 scorePath 	= os.path.join( sys.argv[2], fragsDir.split('/')[-1][4:] + '.sc' )
 
+## Abort if fragment directory doesnt exist, aka previous frag creation step was aborted
+
+if not os.path.exists( fragsDir ) or os.path.exists( scorePath ):
+	print "Aborting (score file exists OR frag creation failed)"
+	sys.exit()
+
+##
+
+
+
 createPDSp	= os.path.join( sys.argv[3], 'createPDS' 	)
 masterp		= os.path.join( sys.argv[3], 'master' 		)
 dbList 		= sys.argv[4]
@@ -80,4 +90,4 @@ print txt
 print scorePath
 oFile = open(scorePath, 'w')
 oFile.write( txt  )
-#shutil.rmtree( fragsDir )
+shutil.rmtree( fragsDir )

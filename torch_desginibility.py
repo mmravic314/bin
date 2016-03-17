@@ -99,7 +99,7 @@ if clashes:
 			print 'Helix - sheet clash found. Aborting model!'
 			oFile = open( scorePath, 'w' ) 
 			oFile.write( txt )
-			os.remove( sys.argv[1] )
+#			os.remove( sys.argv[1] )
 			sys.exit()
 
 		# if one is potential H-bonder, find what contact is in  helix, see if H-bonder
@@ -108,7 +108,7 @@ if clashes:
 				print 'Helix - sheet clash found. Aborting model!'
 				oFile = open( scorePath, 'w' ) 
 				oFile.write( txt )
-				os.remove( sys.argv[1] )
+#				os.remove( sys.argv[1] )
 
 				sys.exit()
 
@@ -131,7 +131,7 @@ Eset 	= [ end1, end2 ]
 Mset 	= [ mid1, mid2, mid3 ]
 Allset 	= [ end1, mid1, mid2, mid3, end2 ]	
 
-tmp_dir = os.path.join( sys.argv[2], 'tmp_' + os.path.splitext( os.path.basename( sys.argv[1] ))[0] ) 
+tmp_dir = os.path.join( sys.argv[2] ) 
 if not os.path.exists( tmp_dir ):
 	os.mkdir( tmp_dir )
 else:

@@ -75,7 +75,13 @@ print 'total param sets:', len( params )
 
 index = 0
 step  = 50000
-txt   = '#%d dBeta Theta N_t Z_n Z_c W_n\n' % (index/step)     # + ' '.join( [ x + '\n' for x in params ] 
+txt   = '%d# dBeta Theta N_t Z_n Z_c W_n\n' % (index/step)     # + ' '.join( [ x + '\n' for x in params ] 
+#
+# SYNTAX ####
+# Goofy note: must end each xtxt string with '##' since it adds newline char to final params text line.
+#             This allows the final line to be accessed by bash while loops and 'read' command
+#             This is handled in main bash script that calls param file outputs of this script 
+
 
 rng = random.sample( xrange( i ), i )
 for k in rng:
@@ -87,11 +93,14 @@ for k in rng:
   if index % step  == 0:
 
       outFile = open(  os.path.join( os.path.dirname( sys.argv[1] ), 'params%d.txt' % ( index/step ) )    , 'w' )
-      outFile.write( txt )
+      outFile.write( txt + '##')      
       outFile.close()
       txt = '%d# dBeta Theta N_t Z_n Z_c W_n\n' % (index/step)
  
-
+# final print out of txt to file:
+outFile = open(  os.path.join( os.path.dirname( sys.argv[1] ), 'params%d.txt' % ( int( str( index/step ).split('.')[0] ) +1 ) )    , 'w' )
+outFile.write( txt + '##')
+outFile.close()
 
 
 #txt = '# dBeta Theta N_t Z_n Z_c W_n\n' + ' '.join( [ x + '\n' for x in params ] )
