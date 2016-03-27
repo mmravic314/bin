@@ -34,7 +34,7 @@ if not os.path.exists( fragsDir ):
 	sys.exit()
 
 
-if not os.path.exists( scorePath ):
+if  os.path.exists( scorePath ):
 	print "Aborting (score file exists)"
 	sys.exit()
 
@@ -58,6 +58,9 @@ if len( [ x for x in os.listdir( sys.argv[1] ) if x[-3:] == 'pdb' ] ) < 4:
 
 	sys.exit()
 
+# dump noisy std ouput master produces
+FNULL = open(os.devnull, 'w')
+
 
 txt = 'HH SH0 SH1 SH2\n'
 for f in sorted( os.listdir( fragsDir ) ):
@@ -79,7 +82,8 @@ for f in sorted( os.listdir( fragsDir ) ):
 	cmdMstr	= [ masterp, '--query', pdsPath, '--targetList', dbList, '--bbRMSD', '--rmsdCut', rmsd, '--seqOut', seqOutPath ]
 
 	sp.call( cmdPDS )
-	sp.call( cmdMstr )
+	sp.call( cmdMstr, stdout=FNULL, stderr=sp.STDOUT )
+
 
 	# search files for unique sequences  n*(n-1) complexity
 	uniq = []

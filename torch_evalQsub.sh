@@ -10,7 +10,9 @@
 #$ -o /netapp/home/mmravic/peptideAmyloid/logfiles/
 
 ### Know task from number of length of list file or number of pdb's in directory... hardcode in
-#$ -t 1-50000
+#$ -t 1-12904
+
+##$ -t 1-50000
 
 # For each task, read the input file and stop on the line defined by the SGE task ID (on cluster)
 # if parameter file has a skip number (e.g. params2.txt starts with 1#), then all model id's should increase by ( skip number * 50000 ) via parameter subset size, from paramsGen.py
@@ -23,8 +25,7 @@
 ####
 
 ## actual
-# ~/bin/torch_evalQsub.sh ~/peptideAmyloid/parameterization/params_OG.txt ~/peptideAmyloid/OsakaModels/ ~/peptideAmyloid/scores_rnd1/ ~/peptideAmyloid/parameterization/helix_prep/18_Ideal_allALA.pdb ~/peptideAmyloid/parameterization/FullInterfaceCENTERED.pdb ~/binLocal/termanal/support.default/162901_bc_30-scPDB/list.txt ~/binLocal/termanal/ 
-#
+# qsub ~/bin/torch_evalQsub.sh ~/peptideAmyloid/parameterization/params12.txt ~/peptideAmyloid/OsakaModels/ ~/peptideAmyloid/scores_rnd1/ ~/peptideAmyloid/parameterization/helix_prep/18_Ideal_allALA.pdb ~/peptideAmyloid/parameterization/FullInterfaceCENTERED.pdb ~/binLocal/termanal/support.default/162901_bc_30-scPDB/list.txt ~/binLocal/termanal/
 ##
 
 ## 
@@ -75,7 +76,7 @@ start=$inx
 
 # tasks start at 1, so {1,2,...50000}, {50001,...100000}
 taskID=$SGE_TASK_ID 			#CLUSTER
-#taskID=1						# LOCAL 
+#taskID=5						# LOCAL 
 stop=$(( $start + $taskID - 1 ))
 
 basename="model_$stop.pdb"
