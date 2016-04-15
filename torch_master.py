@@ -5,6 +5,13 @@
 # do master search 
 # print score for each score to file
 
+# input 1: path Dir containing fragments
+# input 2: path Dir to print score file to 
+# input 3: path to dir with ./master and ./createPDS
+# input 4: path the targetList file, text file list of all paths to .pds file in database for search
+
+
+
 # maybe take some pairwise sequence stats, given residue identities on the sheet with output sequence file
 
 import sys, os, subprocess as sp, shutil, time
