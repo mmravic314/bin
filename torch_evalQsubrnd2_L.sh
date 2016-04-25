@@ -12,6 +12,7 @@
 ### Know task from number of length of list file or number of pdb's in directory... hardcode in
 #$ -t 1-20013
 
+
 # For each task, read the input file and stop on the line defined by the SGE task ID (on cluster)
 # if parameter file has a skip number (e.g. params2.txt starts with 1#), then all model id's should increase by ( skip number * 50000 ) via parameter subset size, from paramsGen.py
 
