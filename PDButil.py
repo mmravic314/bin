@@ -25,17 +25,17 @@ aaProp["LEU"] = 8.83; aaProp["MET"] = 2.08; aaProp["ASN"] = 4.50; aaProp["PRO"] 
 aaProp["ARG"] = 5.03; aaProp["SER"] = 6.13; aaProp["THR"] = 5.53; aaProp["VAL"] = 6.91; aaProp["TRP"] = 1.51; aaProp["TYR"] = 3.54;
 
 ## Unnatural/PTM Amino acid converter
-unNatAA = { 'ABA':'ALA', 
-'CSO':'CYS' , 'CSD':'CYS', 'CME':'CYS', 'OCS':'CYS', 
-"HSD":'HIS',
-'KCX':'LYS', 'LLP':'LYS', 'MLY':'LYS', 'M3L':'LYS', 
-'MSE':'MET', 
-'PCA':'PRO', 'HYP':'PRO',
-'SEP':'SER', 'TPO':'THR', 'PTR':'TYR'
-  }
+#unNatAA = { 'ABA':'A', 
+#'CSO':'C' , 'CSD':'C', 'CME':'C', 'OCS':'C', 
+#"HSD":'H',
+#'KCX':'K', 'LLP':'K', 'MLY':'K', 'M3L':'K', 
+#'MSE':'M', 
+#'PCA':'P', 'HYP':'P',
+#'SEP':'S', 'TPO':'T', 'PTR':'Y'
+#  }
 
 # Same Three to One res ID converter but includes/converts unnatural/modified amino acids
-UnNatAA = {}
+UnNatAA={}
 UnNatAA["ALA"] = 'A'; UnNatAA["CYS"] = 'C'; UnNatAA["ASP"] = 'D'; UnNatAA["GLU"] = 'E'; UnNatAA["PHE"] = 'F';
 UnNatAA["GLY"] = 'G'; UnNatAA["HIS"] = 'H'; UnNatAA["ILE"] = 'I'; UnNatAA["LYS"] = 'K';
 UnNatAA["LEU"] = 'L'; UnNatAA["MET"] = 'M'; UnNatAA["ASN"] = 'N'; UnNatAA["PRO"] = 'P'; UnNatAA["GLN"] = 'N';
