@@ -2,7 +2,7 @@
 
 # cluster successful models by parameters to grab representitive
 
-import sys, os, numpy as np, cPickle as pic
+import sys, os, numpy as np, cPickle as pic, shutil
 
 # input paramsSummary file
 # input path to pickle of extracted params scores
@@ -120,7 +120,9 @@ for cen in cluster_centers:
 	minV 	= min(dif)
 	index	= dif.index( minV )
 	print 'cluster', ind, 'closest to sample', index, 'model', modelLookup[index]
-	path 	= os.path.join( sys.argv[4], 'model_%s' % ( modelLookup[index][0][0] ) )
+	path 	= os.path.join( sys.argv[4], 'model_%s.pdb.gz' % ( modelLookup[index][0][0] ) )
+	newPath = os.path.join( sys.argv[5], 'model_%s.pdb.gz' % ( modelLookup[index][0][0] ) )
+	shutil.copy( path, newPath )
 
 	outTXT	+= '%s cluster-%d members-%d %s\n' % ( path, ind, cnt[ind], modelLookup[index][1] )
 
@@ -131,12 +133,9 @@ for cen in cluster_centers:
 print 
 print outTXT
 print
-#for k, v in sorted( recall.items() ):
-#	print k
-#	print v
-#	print
+outFile = open( sys.argv[6], 'w' )
+outFile.write( outTXT )
 
-#print len( recall.keys() ), n_clusters_
 
 sys.exit()
 

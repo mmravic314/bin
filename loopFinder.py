@@ -4,10 +4,15 @@ import sys, os, subprocess as sp, numpy as np
 from prody import *
 from operator import itemgetter
 from itertools import groupby
+from PDButil import UnNatAA
 
 inPDB = parsePDB( sys.argv[1], subset = 'bb' )
 
 # python ~/bin/loopFinder.py 56_helices.pdb 56_helices.m ~/termanal/support.default/151218_masterDB_parsedPDB/ ~/tertBuilding/CMP_bobo/56_helices/
+# python ~/bin/loopFinder.py BA-Loop.pdb BA-Loop.m ~/termanal/support.default/v2_162901_bc_30-scPDB_oPDB/ BA-Loop_Matches/
+
+
+seqs = []
 
 # look into file
 lineNum = 0
@@ -20,9 +25,9 @@ with open( sys.argv[2] ) as file:
 
 		fragMatch = [ tuple( x.strip(',').strip('()').split(',') ) for x in m.split('[')[-1].split(']')[0].split() ]
 		
-		gapL = int ( fragMatch[1][0] ) - int( fragMatch[0][1] ) 
+		gapL = int ( fragMatch[1][0] ) - int( fragMatch[0][1] ) -1
 
-		if gapL > 14 or gapL < 0:
+		if gapL > 16 or gapL < 0:
 			lineNum +=1
 			continue
 
@@ -44,12 +49,22 @@ with open( sys.argv[2] ) as file:
 		for res in mPdb.iterResidues():
 			res.setResnum( r )
 			r += 1
-		print gapL#, rmsd, 'match%d' % ( lineNum )# fragMatch, selRng, selStr
-		#print
 
 
 		wholeset 	= mPdb.select( selRng ).copy()
 		ends		= mPdb.select( selStr ).copy()
+
+		seq =  ''.join( [ UnNatAA[ x.getResname() ]  for x in wholeset.iterResidues() ] )
+
+		if seq in seqs: continue
+		seqs.append( seq )
+
+		print 'loop Length:', gapL, 'RMSD:', rmsd, 'match%d' % ( lineNum ),# 'residue indices in match:', fragMatch
+		print	seq
+		print
+
+
+
 
 		wholeset.setTitle( str(rmsd) )
 		ends.setTitle( str(rmsd) )

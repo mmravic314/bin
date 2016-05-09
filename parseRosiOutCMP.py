@@ -9,6 +9,8 @@ from prody import *
 #score_eval -18.3668
 #uhb 4
 
+designs = {}
+
 for i in os.listdir( sys.argv[1] ):
 	if i[-3:] != 'pdb': continue
 
@@ -44,8 +46,18 @@ for i in os.listdir( sys.argv[1] ):
 
 			else: continue
 
-	print i, seq, sc, ps, uhb
+	#print i, seq, sc, ps, uhb
 
+	try: 
+		if designs[seq][0] < ps:
+			designs[seq] = [ps, sc, uhb, i]
 
+	except KeyError:
+		designs[seq] = [ps, sc, uhb, i]
 
 #	sys.exit()
+print
+for k, v in designs.items():
+	print '>', v[0], v[1], v[2], v[3]
+	print k
+	print

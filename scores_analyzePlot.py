@@ -45,8 +45,9 @@ def sortBest( fPath, outDir ):
 
 			ind +=1
 			if int( i.split()[-1] ):
-				if min( scores ) > 100:
+				if min( scores ) > 140:
 					good[model] = dataPoint( model, params, scores, cls )
+					print model, ''.join( params ), scores
 
 	print 
 	print ind, len( good )
@@ -55,6 +56,9 @@ def sortBest( fPath, outDir ):
 
 
 	return
+
+#sortBest( sys.argv[1], sys.argv[2] )
+#sys.exit()
 
 ## plot 1D histograms for each parameter given its classification
 ## return overall normalized frequencies (obs) each class
@@ -83,6 +87,8 @@ with open( sys.argv[1] ) as fin:
 
 			if int( i.split()[-1] ):
 				tru.append( params )
+			#	print i
+
 			else:
 				fals.append( params )
 
@@ -110,7 +116,7 @@ for ax, title, k in zip( setAX, titles, [0,1,2,3,4,5] ):
 	ax.set_title( title )
 
 
-fig.suptitle( 'Rnd1 params for TORCH model hits: class=1 (n=%d)' % ( len(data) ), fontsize=20 )
+fig.suptitle( 'Rnd2 params for TORCH model hits: class=1 (n=%d)' % ( len(data) ), fontsize=20 )
 
 plt.show()
 
@@ -132,7 +138,7 @@ for ax, title, k in zip( setAX, titles, [0,1,2,3,4,5] ):
 	ax.set_title( title )
 
 
-fig.suptitle( 'Rnd1 params for TORCH model misses: class=0 (n=%d)' % ( len(data) ), fontsize=20 )
+fig.suptitle( 'Rnd2 params for TORCH model misses: class=0 (n=%d)' % ( len(data) ), fontsize=20 )
 
 plt.show()
 
@@ -152,7 +158,7 @@ plt.pie(sizes, labels=labels, colors=colors,
         autopct='%1.1f%%', shadow=True, startangle=20)
 # Set aspect ratio to be equal so that pie is drawn as a circle.
 
-plt.title( 'Observed RND1 TORCH Model \n\'Design-ibility\' Classification' , fontsize=20)
+plt.title( 'Observed RND2 TORCH Model \n\'Design-ibility\' Classification' , fontsize=20)
 
 plt.axis('equal')
 plt.show()

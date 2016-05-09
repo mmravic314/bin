@@ -5,7 +5,7 @@ hLen	= 30.216
 
 
 #
-#scl enable python27 'python ~/bin/summarize_paramsScores.py ~/peptideAmyloid/rnd1_scores/ ~/peptideAmyloid/rnd1OsakaModels/  rnd2_Summary.txt '
+#scl enable python27 'python ~/bin/summarize_paramsScores.py ~/peptideAmyloid/rnd2_scores/ ~/peptideAmyloid/rnd2_OsakaModels/  rnd2_Summary.txt '
 #
 # scl enable python27 'python ~/bin/summarize_paramsScores.py ~/peptideAmyloid/tmp_PA/ ~/peptideAmyloid/tmp_PA/ rnd2_Summary.txt '
 
