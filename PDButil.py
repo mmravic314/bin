@@ -4,6 +4,8 @@
 import numpy as np
 from prody import * 
 from collections import Counter
+from random import randint
+
 
 ###################### Globally defined helpers  ####################
 
@@ -44,6 +46,14 @@ UnNatAA['ABA'] = 'A'; UnNatAA['CSO'] = 'C'; UnNatAA['CSD'] = 'C'; UnNatAA['CME']
 UnNatAA['OCS'] = 'C'; UnNatAA["HSD"] = 'H'; UnNatAA['KCX'] = 'K'; UnNatAA['LLP'] = 'K';
 UnNatAA['MLY'] = 'K'; UnNatAA['M3L'] = 'K'; UnNatAA['MSE'] = 'M'; UnNatAA['PCA'] = 'P'; UnNatAA['HYP'] = 'P';
 UnNatAA['SEP'] = 'S'; UnNatAA['TPO'] = 'T'; UnNatAA['PTR'] = 'Y'
+
+
+NatAA_3 = {}
+NatAA_3['A'] = 'ALA'; NatAA_3['C'] = 'CYS'; NatAA_3['D'] = 'ASP'; 
+NatAA_3['E'] = 'GLU'; NatAA_3['F'] = 'PHE'; NatAA_3['G'] = 'GLY'; NatAA_3['H'] = 'HIS'; NatAA_3['I'] = 'ILE'; NatAA_3['K'] = 'LYS'; 
+NatAA_3['L'] = 'LEU'; NatAA_3['M'] = 'MET'; NatAA_3['N'] = 'ASN'; NatAA_3['P'] = 'PRO'; NatAA_3['Q'] = 'GLN'; 
+NatAA_3['R'] = 'ARG'; NatAA_3['S'] = 'SER'; NatAA_3['T'] = 'THR'; NatAA_3['V'] = 'VAL'; NatAA_3['W'] = 'TRP'; NatAA_3['Y'] = 'TYR'; 
+
 
 
 #################### End of Global Definitions ####################
@@ -322,9 +332,8 @@ def ext_aHelixBOTH ( obj, idealH ):
 	return obj
 
 
-
-
-
+def random_membrane_res():
+	return ['A', 'F', 'V', 'I', 'L', 'L', 'L', 'L', 'L', 'L'][randint(0,9)]
 
 
 
